@@ -1,0 +1,143 @@
+/* Intranet from the Trenches style */
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f0f0e8;
+  color: #000000;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+}
+
+.container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border: 2px solid #666666;
+  box-shadow: 3px 3px 0 #999999;
+}
+
+header {
+  background-color: #003366;
+  color: #ffffff;
+  padding: 10px 20px;
+  margin-bottom: 20px;
+  border-bottom: 3px solid #001a33;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+nav {
+  background-color: #e8e4d9;
+  padding: 8px 20px;
+  border-bottom: 1px solid #999999;
+  margin-bottom: 20px;
+}
+
+nav a {
+  color: #003366;
+  text-decoration: none;
+  margin-right: 20px;
+  font-weight: bold;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+h2 {
+  color: #003366;
+  border-bottom: 1px solid #cccccc;
+  padding-bottom: 5px;
+  font-size: 18px;
+}
+
+form {
+  background-color: #f5f5f0;
+  padding: 15px;
+  border: 1px solid #999999;
+  margin-bottom: 20px;
+}
+
+input[type="text"], input[type="url"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #666666;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+button {
+  background-color: #003366;
+  color: #ffffff;
+  border: 1px solid #001a33;
+  padding: 8px 16px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #001a33;
+}
+
+.result {
+  background-color: #ffffcc;
+  border: 1px solid #cccc00;
+  padding: 10px;
+  margin-top: 15px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #666666;
+}
+
+th, td {
+  border: 1px solid #999999;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #003366;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #f5f5f0;
+}
+
+tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+a {
+  color: #0000ee;
+}
+
+a:visited {
+  color: #551a8b;
+}
+
+.short-url {
+  font-family: monospace;
+  background-color: #e8e4d9;
+  padding: 2px 4px;
+  border: 1px solid #999999;
+}
+
+.error {
+  color: #cc0000;
+  background-color: #ffeeee;
+  border: 1px solid #cc0000;
+  padding: 10px;
+}
