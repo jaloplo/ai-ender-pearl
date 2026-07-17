@@ -2,8 +2,8 @@ import './globals.css';
 import { cookies } from 'next/headers';
 
 export const metadata = {
-  title: 'URL Shortener - Intranet from the Trenches',
-  description: 'Internal URL Shortener Application',
+  title: 'Ender Pearl',
+  description: 'Intranet from the Trenches URL Shortener Application'
 };
 
 export default function RootLayout({ children }) {
@@ -67,7 +67,7 @@ export default function RootLayout({ children }) {
         </div>
 
         <footer>
-          Internal Use Only • Data stored locally
+          © 2026 JAIME LÓPEZ — ALL RIGHTS RESERVED
         </footer>
       </body>
     </html>

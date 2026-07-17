@@ -48,7 +48,7 @@ export default function ShortenPage() {
     <>
       <h2>Shorten a URL</h2>
       <p>
-        Enter a long URL below to generate a shortened version for internal use.
+        Enter a long URL below to generate a shortened version to use.
       </p>
       
       <form onSubmit={handleSubmit}>
@@ -86,8 +86,6 @@ export default function ShortenPage() {
       )}
 
       <div className="metadata" style={{ marginTop: '32px' }}>
-        <strong>Note:</strong> Shortened URLs are stored locally in <code>data/urls.json</code>.
-        Use the List page to view all shortened links.
       </div>
     </>
   );
