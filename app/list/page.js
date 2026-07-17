@@ -16,6 +16,11 @@ export default function ListPage() {
       const data = await response.json();
       
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          // Should not happen due to middleware, but fallback
+          window.location.href = '/login';
+          return;
+        }
         setError(data.error || 'Failed to load URLs');
       } else {
         setItems(data.items || []);
@@ -27,13 +32,22 @@ export default function ListPage() {
     }
   };
 
+  const handleLogout = () => {
+    window.location.href = '/api/auth/logout';
+  };
+
   useEffect(() => {
     fetchUrls();
   }, []);
 
   return (
     <>
-      <h2>All Shortened URLs</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2>All Shortened URLs</h2>
+        <button onClick={handleLogout} style={{ backgroundColor: '#666666', fontSize: '12px', padding: '4px 8px' }}>
+          Logout
+        </button>
+      </div>
       <p style={{ marginBottom: '15px' }}>
         Below is a list of all URLs that have been shortened. Data is persisted in the local file system.
       </p>

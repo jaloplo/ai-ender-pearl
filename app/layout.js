@@ -1,4 +1,5 @@
 import './globals.css';
+import { cookies } from 'next/headers';
 
 export const metadata = {
   title: 'URL Shortener - Intranet from the Trenches',
@@ -6,6 +7,10 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const cookieStore = cookies();
+  const authCookie = cookieStore.get('auth');
+  const isAuthenticated = authCookie && authCookie.value === 'true';
+
   return (
     <html lang="en">
       <body>
@@ -15,7 +20,14 @@ export default function RootLayout({ children }) {
         </header>
         <nav>
           <a href="/">Shorten URL</a>
-          <a href="/list">List All URLs</a>
+          {isAuthenticated ? (
+            <>
+              <a href="/list">List All URLs</a>
+              <a href="/api/auth/logout" style={{ float: 'right' }}>Logout</a>
+            </>
+          ) : (
+            <a href="/login">Login</a>
+          )}
         </nav>
         <div className="container">
           {children}
