@@ -54,3 +54,9 @@
 * **Context:** User request to "generate the README.md file focus on business information first, and then technical information".
 * **Decision:** Created comprehensive README.md prioritizing business overview, benefits, and user features before technical stack, architecture, and setup. Used Mermaid diagram and aligned with project memory + ADR history.
 * **Consequences:** Provides clear entry point for stakeholders (business) and developers (technical). Documentation now complete and consistent with Intranet from the Trenches theme and all implemented features.
+
+## 10. Hero Section and Prominent URL Input Enhancements
+* **Date:** 2024-10-23
+* **Context:** User request to implement two landing page features: (1) Hero Section with Value Proposition (headline, tagline, feature highlights) and (2) Prominent and Visually Distinct URL Input Section (enhanced form styling, larger input, card treatment, visible CTA). Goal: transform bare functional page into engaging experience while using current styles with slight retro corporate adaptations.
+* **Decision:** Updated `app/page.js` to wrap existing form logic in new `<section class="hero">` + `<section class="shorten-section">` with prominent-form, prominent-input, and prominent-button classes. Appended dedicated CSS block to `app/globals.css` leveraging existing CSS variables, typography, and Substack/intranet palette (added subtle beige hero tint and stronger borders for distinction). No changes to layout.js, APIs, auth, list page, or core shortening logic.
+* **Consequences:** Delivers compelling first-time visitor experience and focal-point input per acceptance criteria and business rationale. Maintains full backward compatibility and visual consistency. Slight design tweaks (beige tint, 2px borders) enhance prominence without deviating from established editorial/retro theme. Added reasoning.md and this ADR entry.

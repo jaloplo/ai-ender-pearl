@@ -46,47 +46,77 @@ export default function ShortenPage() {
 
   return (
     <>
-      <h2>Shorten a URL</h2>
-      <p>
-        Enter a long URL below to generate a shortened version to use.
-      </p>
-      
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="url">Original URL</label>
-        <input
-          type="text"
-          id="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://example.com/very/long/path"
-          disabled={loading}
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? 'Shortening...' : 'Shorten URL'}
-        </button>
-      </form>
-
-      {error && (
-        <div className="error">
-          {error}
+      {/* Hero Section with Value Proposition - Feature 1 */}
+      <section className="hero">
+        <h1>Shorten Your Links Instantly</h1>
+        <p className="hero-tagline">
+          Transform long, unwieldy URLs into clean, shareable links. 
+          Perfect for internal productivity tools, quick resource sharing, 
+          and streamlined communication across your team.
+        </p>
+        
+        {/* Optional feature highlights */}
+        <div className="hero-features">
+          <div className="feature">
+            <span className="feature-icon">⚡</span>
+            <span>Instant Results</span>
+          </div>
+          <div className="feature">
+            <span className="feature-icon">🔒</span>
+            <span>Secure &amp; Private</span>
+          </div>
+          <div className="feature">
+            <span className="feature-icon">📋</span>
+            <span>Easy to Manage</span>
+          </div>
         </div>
-      )}
+      </section>
 
-      {result && (
-        <div className="result">
-          <strong>Shortened URL</strong><br />
-          <a href={result.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">
-            {result.shortUrl}
-          </a>
-          <br /><br />
-          <strong>Original:</strong> {result.original}<br />
-          <strong>Code:</strong> {result.id}<br />
-          <span className="metadata">Created: {new Date(result.created).toLocaleString()}</span>
+      {/* Prominent URL Input Section - Feature 2 */}
+      <section className="shorten-section">
+        <h2>Shorten a URL</h2>
+        <p>
+          Enter a long URL below to generate a shortened version to use.
+        </p>
+        
+        <form onSubmit={handleSubmit} className="prominent-form">
+          <label htmlFor="url">Original URL</label>
+          <input
+            type="text"
+            id="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://example.com/very/long/path/to/your/resource"
+            disabled={loading}
+            className="prominent-input"
+          />
+          <button type="submit" disabled={loading} className="prominent-button">
+            {loading ? 'Shortening...' : 'Shorten URL'}
+          </button>
+        </form>
+
+        {error && (
+          <div className="error">
+            {error}
+          </div>
+        )}
+
+        {result && (
+          <div className="result">
+            <strong>Shortened URL</strong><br />
+            <a href={result.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">
+              {result.shortUrl}
+            </a>
+            <br /><br />
+            <strong>Original:</strong> {result.original}<br />
+            <strong>Code:</strong> {result.id}<br />
+            <span className="metadata">Created: {new Date(result.created).toLocaleString()}</span>
+          </div>
+        )}
+
+        <div className="metadata" style={{ marginTop: '32px' }}>
         </div>
-      )}
-
-      <div className="metadata" style={{ marginTop: '32px' }}>
-      </div>
+      </section>
     </>
   );
 }
