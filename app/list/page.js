@@ -110,7 +110,7 @@ export default function ListPage() {
 
       <p>
         Below is a list of all URLs that have been shortened. Data is persisted using Cosmos DB (MongoDB API) or local file system.
-        Results are cached in your browser for faster loading.
+        Results are cached in your browser for faster loading. Click "Stats" to view detailed access logs (admin only).
       </p>
 
       {/* Search box for original URLs */}
@@ -194,6 +194,8 @@ export default function ListPage() {
                 <th>Shortened URL</th>
                 <th>Original URL</th>
                 <th>Created</th>
+                <th>Accesses</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -211,6 +213,12 @@ export default function ListPage() {
                     </a>
                   </td>
                   <td className="metadata">{new Date(item.created).toLocaleString()}</td>
+                  <td>{item.accessCount ?? 0}</td>
+                  <td>
+                    <a href={`/stats/${item.id}`} className="btn-tertiary" style={{ padding: '2px 8px', fontSize: '12px' }}>
+                      View Stats
+                    </a>
+                  </td>
                 </tr>
               ))}
             </tbody>

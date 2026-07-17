@@ -16,6 +16,7 @@ export async function GET(request) {
     const items = shorts.map(item => ({
       ...item,
       shortUrl: `${origin}/${item.id}`,
+      accessCount: (item.stats || []).length,
     }));
     
     return NextResponse.json({ items });

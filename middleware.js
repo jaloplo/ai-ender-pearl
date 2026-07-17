@@ -8,8 +8,13 @@ export function middleware(request) {
 
   const isAuthenticated = authCookie && authCookie.value === 'true';
 
-  // Protect /list page and /api/urls endpoint
-  if (pathname === '/list' || pathname.startsWith('/api/urls')) {
+  // Protect /list page, /stats pages, and /api/urls, /api/stats endpoints
+  if (
+    pathname === '/list' ||
+    pathname.startsWith('/stats') ||
+    pathname.startsWith('/api/urls') ||
+    pathname.startsWith('/api/stats')
+  ) {
     if (!isAuthenticated) {
       // Redirect to login page
       const loginUrl = new URL('/login', request.url);
@@ -26,6 +31,8 @@ export function middleware(request) {
 export const config = {
   matcher: [
     '/list',
+    '/stats/:path*',
     '/api/urls/:path*',
+    '/api/stats/:path*',
   ],
 };

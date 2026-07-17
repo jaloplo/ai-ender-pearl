@@ -12,7 +12,12 @@ async function readUrlsFile() {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf-8');
     const parsed = JSON.parse(data);
-    return parsed.shorts || [];
+    const shorts = parsed.shorts || [];
+    // Normalize to always include stats array for backward compat
+    return shorts.map(item => ({
+      ...item,
+      stats: item.stats || [],
+    }));
   } catch (error) {
     // If file doesn't exist or invalid, return empty
     return [];
@@ -61,12 +66,32 @@ async function addShortUrlFile(originalUrl) {
     id: shortCode,
     original: originalUrl,
     created: new Date().toISOString(),
+    stats: [],
   };
   
   shorts.push(newEntry);
   await saveUrlsFile(shorts);
   
   return newEntry;
+}
+
+async function logAccessFile(short, accessInfo) {
+  const shorts = await readUrlsFile();
+  const idx = shorts.findIndex(item => item.id === short);
+  if (idx === -1) {
+    return false;
+  }
+  if (!shorts[idx].stats) {
+    shorts[idx].stats = [];
+  }
+  shorts[idx].stats.push({
+    timestamp: accessInfo.timestamp || new Date().toISOString(),
+    ip: accessInfo.ip || 'unknown',
+    userAgent: accessInfo.userAgent || 'unknown',
+    referer: accessInfo.referer || '',
+  });
+  await saveUrlsFile(shorts);
+  return true;
 }
 
 // Public API - delegates to Cosmos (MongoDB API) or file storage
@@ -100,4 +125,11 @@ export async function addShortUrl(originalUrl) {
     return cosmos.addShortUrl(originalUrl);
   }
   return addShortUrlFile(originalUrl);
+}
+
+export async function logAccess(short, accessInfo) {
+  if (useCosmos) {
+    return cosmos.logAccess(short, accessInfo);
+  }
+  return logAccessFile(short, accessInfo);
 }
