@@ -1,143 +1,332 @@
-/* Intranet from the Trenches style */
+/* 
+ * "Intranet from the Trenches" Web UI & Design Style Guide
+ * Implemented per ui-rules.md
+ * Editorial centric, minimalist, high-contrast, serif for content, sans for utility.
+ */
+
+:root {
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F9F9F9;
+  --color-text-primary: #151515;
+  --color-text-secondary: #666666;
+  --color-brand-accent: #115E59;
+  --color-border-subtle: #E5E5E5;
+}
+
+/* Base */
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  background-color: #f0f0e8;
-  color: #000000;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
   margin: 0;
   padding: 0;
-  font-size: 14px;
+  font-size: 17px;
+  line-height: 1.55;
 }
 
-.container {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 20px;
-  background-color: #ffffff;
-  border: 2px solid #666666;
-  box-shadow: 3px 3px 0 #999999;
+/* Editorial typography for headings and body prose */
+h1, h2, h3, .editorial {
+  font-family: Georgia, "Times New Roman", Times, serif;
 }
 
-header {
-  background-color: #003366;
-  color: #ffffff;
-  padding: 10px 20px;
-  margin-bottom: 20px;
-  border-bottom: 3px solid #001a33;
-}
-
-header h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-nav {
-  background-color: #e8e4d9;
-  padding: 8px 20px;
-  border-bottom: 1px solid #999999;
-  margin-bottom: 20px;
-}
-
-nav a {
-  color: #003366;
-  text-decoration: none;
-  margin-right: 20px;
-  font-weight: bold;
-}
-
-nav a:hover {
-  text-decoration: underline;
+h1 {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 16px 0;
 }
 
 h2 {
-  color: #003366;
-  border-bottom: 1px solid #cccccc;
-  padding-bottom: 5px;
-  font-size: 18px;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0 0 12px 0;
+  color: var(--color-text-primary);
 }
 
+p, li {
+  font-size: 17px;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+
+/* Layout Structure - adapted to 1140px max, 720px reading/content */
+.container {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.main-content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+/* Header - sticky, clean, editorial */
+header {
+  background-color: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  font-size: 28px;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+header .subtitle {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 2px 0 0 0;
+  letter-spacing: 0.02em;
+}
+
+/* Navigation - utility sans, subtle */
+nav {
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 8px 0;
+}
+
+.nav-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+nav a {
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 0;
+}
+
+nav a:hover {
+  color: var(--color-brand-accent);
+  text-decoration: underline;
+}
+
+nav .nav-right {
+  margin-left: auto;
+}
+
+/* Forms - clean, flat */
 form {
-  background-color: #f5f5f0;
-  padding: 15px;
-  border: 1px solid #999999;
-  margin-bottom: 20px;
+  background-color: var(--color-bg-secondary);
+  padding: 24px;
+  border: 1px solid var(--color-border-subtle);
+  margin-bottom: 24px;
 }
 
-input[type="text"], input[type="url"] {
+label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--color-text-secondary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+input[type="text"],
+input[type="url"],
+input[type="password"] {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #666666;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-subtle);
+  background-color: var(--color-bg-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  margin-bottom: 16px;
   box-sizing: border-box;
+  color: var(--color-text-primary);
 }
 
-button {
-  background-color: #003366;
-  color: #ffffff;
-  border: 1px solid #001a33;
-  padding: 8px 16px;
-  font-family: Arial, sans-serif;
+input[type="text"]:focus,
+input[type="url"]:focus,
+input[type="password"]:focus {
+  outline: none;
+  border-color: var(--color-brand-accent);
+  box-shadow: 0 0 0 1px var(--color-brand-accent);
+}
+
+/* Buttons & CTAs - per spec */
+button,
+.button {
+  background-color: var(--color-brand-accent);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 24px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: opacity 0.1s ease;
 }
 
-button:hover {
-  background-color: #001a33;
+button:hover,
+.button:hover {
+  opacity: 0.9;
 }
 
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Secondary button variant */
+button.secondary,
+.button.secondary {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+button.secondary:hover {
+  background-color: #f0f0f0;
+  opacity: 1;
+}
+
+/* Result / Success blocks */
 .result {
-  background-color: #ffffcc;
-  border: 1px solid #cccc00;
-  padding: 10px;
-  margin-top: 15px;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-subtle);
+  padding: 16px;
+  margin-top: 16px;
 }
 
+.result strong {
+  font-weight: 600;
+}
+
+/* Error messages */
+.error {
+  color: #b91c1c;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-size: 14px;
+}
+
+/* Tables - clean, high readability */
 table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid #666666;
+  border: 1px solid var(--color-border-subtle);
+  font-size: 14px;
+  margin-bottom: 16px;
 }
 
 th, td {
-  border: 1px solid #999999;
-  padding: 8px;
+  border: 1px solid var(--color-border-subtle);
+  padding: 10px 12px;
   text-align: left;
+  vertical-align: top;
 }
 
 th {
-  background-color: #003366;
-  color: #ffffff;
-  font-weight: bold;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 tr:nth-child(even) {
-  background-color: #f5f5f0;
+  background-color: var(--color-bg-secondary);
 }
 
-tr:nth-child(odd) {
-  background-color: #ffffff;
+tr:hover {
+  background-color: #f5f5f5;
 }
 
+/* Links */
 a {
-  color: #0000ee;
+  color: var(--color-brand-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 a:visited {
-  color: #551a8b;
+  color: #0f4a46; /* slightly darker teal */
 }
 
+/* Utility classes */
 .short-url {
-  font-family: monospace;
-  background-color: #e8e4d9;
-  padding: 2px 4px;
-  border: 1px solid #999999;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background-color: var(--color-bg-secondary);
+  padding: 2px 6px;
+  border: 1px solid var(--color-border-subtle);
+  font-size: 13px;
+  word-break: break-all;
 }
 
-.error {
-  color: #cc0000;
-  background-color: #ffeeee;
-  border: 1px solid #cc0000;
-  padding: 10px;
+.metadata {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  margin-top: 64px;
+  padding: 24px 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container,
+  .header-inner,
+  .nav-inner {
+    padding: 0 16px;
+  }
+  
+  h1 {
+    font-size: 28px;
+  }
+  
+  h2 {
+    font-size: 22px;
+  }
+  
+  .main-content {
+    padding: 32px 0;
+  }
+  
+  table {
+    font-size: 13px;
+  }
+  
+  th, td {
+    padding: 8px;
+  }
 }

@@ -47,12 +47,12 @@ export default function ShortenPage() {
   return (
     <>
       <h2>Shorten a URL</h2>
-      <p style={{ marginBottom: '15px' }}>
+      <p>
         Enter a long URL below to generate a shortened version for internal use.
       </p>
       
       <form onSubmit={handleSubmit}>
-        <label htmlFor="url">Original URL:</label>
+        <label htmlFor="url">Original URL</label>
         <input
           type="text"
           id="url"
@@ -74,18 +74,18 @@ export default function ShortenPage() {
 
       {result && (
         <div className="result">
-          <strong>Shortened URL:</strong><br />
+          <strong>Shortened URL</strong><br />
           <a href={result.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">
             {result.shortUrl}
           </a>
           <br /><br />
           <strong>Original:</strong> {result.original}<br />
           <strong>Code:</strong> {result.id}<br />
-          <strong>Created:</strong> {new Date(result.created).toLocaleString()}
+          <span className="metadata">Created: {new Date(result.created).toLocaleString()}</span>
         </div>
       )}
 
-      <div style={{ marginTop: '30px', fontSize: '12px', color: '#666' }}>
+      <div className="metadata" style={{ marginTop: '32px' }}>
         <strong>Note:</strong> Shortened URLs are stored locally in <code>data/urls.json</code>.
         Use the List page to view all shortened links.
       </div>

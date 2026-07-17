@@ -15,24 +15,35 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <header>
-          <h1>URL Shortener</h1>
-          <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>Intranet from the Trenches</p>
+          <div className="header-inner">
+            <div>
+              <h1>URL Shortener</h1>
+              <p className="subtitle">Intranet from the Trenches</p>
+            </div>
+          </div>
         </header>
+        
         <nav>
-          <a href="/">Shorten URL</a>
-          {isAuthenticated ? (
-            <>
-              <a href="/list">List All URLs</a>
-              <a href="/api/auth/logout" style={{ float: 'right' }}>Logout</a>
-            </>
-          ) : (
-            <a href="/login">Login</a>
-          )}
+          <div className="nav-inner">
+            <a href="/">Shorten URL</a>
+            {isAuthenticated ? (
+              <>
+                <a href="/list">List All URLs</a>
+                <a href="/api/auth/logout" className="nav-right">Logout</a>
+              </>
+            ) : (
+              <a href="/login">Login</a>
+            )}
+          </div>
         </nav>
+
         <div className="container">
-          {children}
+          <div className="main-content">
+            {children}
+          </div>
         </div>
-        <footer style={{ textAlign: 'center', marginTop: '30px', fontSize: '11px', color: '#666' }}>
+
+        <footer>
           Internal Use Only • Data stored locally
         </footer>
       </body>

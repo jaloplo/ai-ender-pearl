@@ -40,12 +40,12 @@ export default function LoginPage() {
   return (
     <>
       <h2>Login Required</h2>
-      <p style={{ marginBottom: '15px' }}>
+      <p>
         Please authenticate to access the URL list page. Use the credentials provided for this internal system.
       </p>
 
       <form onSubmit={handleSubmit}>
-        <label htmlFor="username">Username:</label>
+        <label htmlFor="username">Username</label>
         <input
           type="text"
           id="username"
@@ -55,7 +55,8 @@ export default function LoginPage() {
           disabled={loading}
           required
         />
-        <label htmlFor="password">Password:</label>
+        
+        <label htmlFor="password">Password</label>
         <input
           type="password"
           id="password"
@@ -65,6 +66,7 @@ export default function LoginPage() {
           disabled={loading}
           required
         />
+        
         <button type="submit" disabled={loading}>
           {loading ? 'Logging in...' : 'Login'}
         </button>
@@ -76,7 +78,7 @@ export default function LoginPage() {
         </div>
       )}
 
-      <div style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
+      <div className="metadata" style={{ marginTop: '24px' }}>
         <strong>Demo credentials:</strong> username <code>admin</code>, password <code>admin</code>
       </div>
     </>

@@ -17,7 +17,6 @@ export default function ListPage() {
       
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          // Should not happen due to middleware, but fallback
           window.location.href = '/login';
           return;
         }
@@ -42,17 +41,27 @@ export default function ListPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <h2>All Shortened URLs</h2>
-        <button onClick={handleLogout} style={{ backgroundColor: '#666666', fontSize: '12px', padding: '4px 8px' }}>
+        <button 
+          onClick={handleLogout} 
+          className="secondary"
+          style={{ fontSize: '13px', padding: '6px 14px' }}
+        >
           Logout
         </button>
       </div>
-      <p style={{ marginBottom: '15px' }}>
+      
+      <p>
         Below is a list of all URLs that have been shortened. Data is persisted in the local file system.
       </p>
 
-      <button onClick={fetchUrls} disabled={loading} style={{ marginBottom: '15px' }}>
+      <button 
+        onClick={fetchUrls} 
+        disabled={loading} 
+        className="secondary"
+        style={{ marginBottom: '16px' }}
+      >
         {loading ? 'Refreshing...' : 'Refresh List'}
       </button>
 
@@ -63,11 +72,13 @@ export default function ListPage() {
       )}
 
       {loading && !error && (
-        <p>Loading...</p>
+        <p className="metadata">Loading...</p>
       )}
 
       {!loading && items.length === 0 && !error && (
-        <p>No URLs have been shortened yet. Go to the <a href="/">Shorten page</a> to create one.</p>
+        <p>
+          No URLs have been shortened yet. Go to the <a href="/">Shorten page</a> to create one.
+        </p>
       )}
 
       {!loading && items.length > 0 && (
@@ -83,7 +94,7 @@ export default function ListPage() {
           <tbody>
             {items.map((item) => (
               <tr key={item.id}>
-                <td><code>{item.id}</code></td>
+                <td><code className="short-url">{item.id}</code></td>
                 <td>
                   <a href={item.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">
                     {item.shortUrl}
@@ -94,14 +105,14 @@ export default function ListPage() {
                     {item.original}
                   </a>
                 </td>
-                <td>{new Date(item.created).toLocaleString()}</td>
+                <td className="metadata">{new Date(item.created).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
 
-      <div style={{ marginTop: '20px', fontSize: '12px' }}>
+      <div className="metadata" style={{ marginTop: '16px' }}>
         Total entries: {items.length}
       </div>
     </>
