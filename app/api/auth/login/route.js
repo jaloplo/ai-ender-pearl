@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
+import { isAllowedOrigin, createForbiddenResponse } from '@/app/lib/security';
 
 export async function POST(request) {
+  // Security: only allow same-domain calls
+  if (!isAllowedOrigin(request)) {
+    return createForbiddenResponse();
+  }
+
   try {
     const { username, password } = await request.json();
 

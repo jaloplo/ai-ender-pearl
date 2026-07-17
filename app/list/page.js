@@ -42,7 +42,7 @@ export default function ListPage() {
       </div>
       
       <p>
-        Below is a list of all URLs that have been shortened. Data is persisted in the local file system.
+        Below is a list of all URLs that have been shortened. Data is persisted using Cosmos DB (MongoDB API) or local file system.
       </p>
 
       <button 

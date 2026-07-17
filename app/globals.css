@@ -9,7 +9,7 @@
   --color-bg-secondary: #F9F9F9;
   --color-text-primary: #151515;
   --color-text-secondary: #666666;
-  --color-brand-accent: #115E59;
+  --color-brand-accent: #66cd7a;
   --color-border-subtle: #E5E5E5;
   /* Substack header replication colors */
   --header-accent: #66cd7a;
@@ -424,7 +424,7 @@ a:hover {
 }
 
 a:visited {
-  color: #0f4a46; /* slightly darker teal */
+  color: #0f4a46; /* slightly darker teal - kept for contrast, or could adjust to green variant */
 }
 
 /* Utility classes */

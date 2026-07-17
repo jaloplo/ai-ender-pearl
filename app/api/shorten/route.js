@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { addShortUrl } from '@/app/lib/urls';
+import { isAllowedOrigin, createForbiddenResponse } from '@/app/lib/security';
 
 export async function POST(request) {
+  // Security: only allow same-domain calls
+  if (!isAllowedOrigin(request)) {
+    return createForbiddenResponse();
+  }
+
   try {
     const { url } = await request.json();
     
