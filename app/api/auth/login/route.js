@@ -14,8 +14,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
     }
 
+    const adminUserName = process.env.ADMIN_USER_NAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
     // Basic hardcoded authentication as specified
-    if (username === 'admin' && password === 'admin') {
+    if (username === adminUserName && password === adminPassword) {
       const response = NextResponse.json({ success: true, message: 'Login successful' });
 
       // Set httpOnly cookie for server-side auth checks (secure for production)
