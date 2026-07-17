@@ -110,7 +110,7 @@ export default function ListPage() {
 
       <p>
         Below is a list of all URLs that have been shortened. Data is persisted using Cosmos DB (MongoDB API) or local file system.
-        Results are cached in your browser for faster loading. Click "Stats" to view detailed access logs (admin only).
+        Results are cached in your browser for faster loading. Click Stats to view detailed access logs (admin only).
       </p>
 
       {/* Search box for original URLs */}

@@ -1,5 +1,6 @@
 import './globals.css';
 import { cookies } from 'next/headers';
+import { Image } from 'next/image';
 
 export const metadata = {
   title: 'Ender Pearl',
@@ -29,7 +30,7 @@ export default function RootLayout({ children }) {
                 <h1 id="wordlogo" style={{ margin: 0 }}>
                   <a href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
                     {/* Replicated wordmark: styled text mimicking the image logo (bold, clean, max-height 36px) */}
-                    <img alt="Intranet from the Trenches" src="https://substackcdn.com/image/fetch/$s_!DJLh!,e_trim:10:white/e_trim:10:transparent/h_72,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F359c9b86-951a-497f-920b-501d2d45b7fb_1584x396.png" style={{ maxHeight: 36 }}></img>
+                    <Image alt="Intranet from the Trenches" src="https://substackcdn.com/image/fetch/$s_!DJLh!,e_trim:10:white/e_trim:10:transparent/h_72,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F359c9b86-951a-497f-920b-501d2d45b7fb_1584x396.png" style={{ maxHeight: 36 }}></Image>
                   </a>
                 </h1>
               </div>
