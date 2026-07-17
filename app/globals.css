@@ -11,6 +11,8 @@
   --color-text-secondary: #666666;
   --color-brand-accent: #115E59;
   --color-border-subtle: #E5E5E5;
+  /* Substack header replication colors */
+  --header-accent: #66cd7a;
 }
 
 /* Base */
@@ -63,7 +65,157 @@ p, li {
   padding: 48px 0;
 }
 
-/* Header - sticky, clean, editorial */
+/* === REPLICATED SUBSTACK HEADER STYLE (from https://intranetfromthetrenches.substack.com/) === */
+/* Matches layout, flex structure, height, logo sizes, and colours of the top bar / header item */
+.top-bar {
+  background-color: #ffffff;
+  height: 88px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.top-bar-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.logo-left {
+  display: flex;
+  align-items: center;
+  flex-basis: 0px;
+  flex-grow: 1;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+}
+
+.logo-small {
+  width: 32px;
+  height: 32px;
+  background-color: #ffffff;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid #e5e5e5;
+}
+
+.logo-small img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.menu-icon {
+  width: 18px;
+  height: 18px;
+  color: #151515;
+}
+
+.logo-center {
+  flex-basis: 0px;
+  flex-grow: 2;
+  display: flex;
+  justify-content: center;
+}
+
+.wordmark {
+  max-height: 36px;
+  display: block;
+  height: auto;
+}
+
+.header-actions {
+  flex-basis: 0px;
+  flex-grow: 1;
+  min-width: fit-content;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.header-actions .actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: #151515;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.icon-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Primary button - matches Substack subscribe style (green accent from page) */
+.btn-primary {
+  background-color: var(--header-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* Tertiary button - matches Sign in style */
+.btn-tertiary {
+  background: none;
+  color: #151515;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-tertiary:hover {
+  background-color: #f0f0f0;
+}
+
+/* === END REPLICATED HEADER === */
+
+/* Header - legacy styles kept for compatibility but header now uses .top-bar */
 header {
   background-color: var(--color-bg-primary);
   border-bottom: 1px solid var(--color-border-subtle);
@@ -95,7 +247,7 @@ header .subtitle {
   letter-spacing: 0.02em;
 }
 
-/* Navigation - utility sans, subtle */
+/* Navigation - utility sans, subtle (kept but may be unused after header update) */
 nav {
   background-color: var(--color-bg-secondary);
   border-bottom: 1px solid var(--color-border-subtle);
@@ -306,7 +458,8 @@ footer {
 @media (max-width: 768px) {
   .container,
   .header-inner,
-  .nav-inner {
+  .nav-inner,
+  .top-bar-inner {
     padding: 0 16px;
   }
   
@@ -328,5 +481,9 @@ footer {
   
   th, td {
     padding: 8px;
+  }
+
+  .logo-center .wordmark {
+    max-height: 28px;
   }
 }

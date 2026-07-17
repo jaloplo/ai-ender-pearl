@@ -19,7 +19,7 @@ export async function POST(request) {
     
     const entry = await addShortUrl(validUrl.toString());
     
-    const shortUrl = `${request.nextUrl.origin}/api/redirect/${entry.id}`;
+    const shortUrl = `${request.nextUrl.origin}/${entry.id}`;
     
     return NextResponse.json({
       id: entry.id,

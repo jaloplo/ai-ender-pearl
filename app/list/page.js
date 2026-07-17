@@ -31,10 +31,6 @@ export default function ListPage() {
     }
   };
 
-  const handleLogout = () => {
-    window.location.href = '/api/auth/logout';
-  };
-
   useEffect(() => {
     fetchUrls();
   }, []);
@@ -43,13 +39,6 @@ export default function ListPage() {
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <h2>All Shortened URLs</h2>
-        <button 
-          onClick={handleLogout} 
-          className="secondary"
-          style={{ fontSize: '13px', padding: '6px 14px' }}
-        >
-          Logout
-        </button>
       </div>
       
       <p>

@@ -9,7 +9,7 @@ export async function GET(request) {
     
     const items = shorts.map(item => ({
       ...item,
-      shortUrl: `${origin}/api/redirect/${item.id}`,
+      shortUrl: `${origin}/${item.id}`,
     }));
     
     return NextResponse.json({ items });
