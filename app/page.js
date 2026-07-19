@@ -46,32 +46,7 @@ export default function ShortenPage() {
 
   return (
     <>
-      {/* Hero Section with Value Proposition - Feature 1 */}
-      <section className="hero">
-        <h1>Shorten Your Links Instantly</h1>
-        <p className="hero-tagline">
-          Transform long, unwieldy URLs into clean, shareable links. 
-          Perfect for internal productivity tools, quick resource sharing, 
-          and streamlined communication across your team.
-        </p>
-        
-        {/* Optional feature highlights */}
-        <div className="hero-features">
-          <div className="feature">
-            <span className="feature-icon">⚡</span>
-            <span>Instant Results</span>
-          </div>
-          <div className="feature">
-            <span className="feature-icon">🔒</span>
-            <span>Secure &amp; Private</span>
-          </div>
-          <div className="feature">
-            <span className="feature-icon">📋</span>
-            <span>Easy to Manage</span>
-          </div>
-        </div>
-      </section>
-
+ 
       {/* Prominent URL Input Section - Feature 2 */}
       <section className="shorten-section">
         <h2>Shorten a URL</h2>
@@ -118,44 +93,6 @@ export default function ShortenPage() {
         </div>
       </section>
 
-      {/* Trust Signals and Feature Highlights - "Why Use Ender Pearl?" */}
-      <section className="trust-signals">
-        <h2>Why Use Ender Pearl?</h2>
-        <p className="trust-intro">
-          Built for teams that value security, speed, and simplicity. 
-          No external dependencies, full control over your links.
-        </p>
-        <div className="highlights">
-          <div className="highlight">
-            <span className="highlight-icon">🔒</span>
-            <div className="highlight-content">
-              <strong>Secure internal access</strong>
-              <span>Private by design. List and analytics require authentication.</span>
-            </div>
-          </div>
-          <div className="highlight">
-            <span className="highlight-icon">⚡</span>
-            <div className="highlight-content">
-              <strong>Instant 302 redirects</strong>
-              <span>Fast, reliable redirects with no tracking overhead for users.</span>
-            </div>
-          </div>
-          <div className="highlight">
-            <span className="highlight-icon">📊</span>
-            <div className="highlight-content">
-              <strong>Trackable analytics</strong>
-              <span>Optional access logs and stats for admins (no user data sold).</span>
-            </div>
-          </div>
-          <div className="highlight">
-            <span className="highlight-icon">🏢</span>
-            <div className="highlight-content">
-              <strong>Internal focus</strong>
-              <span>Designed for intranet and corporate environments. Retro UI that fits.</span>
-            </div>
-          </div>
-        </div>
-      </section>
     </>
   );
 }

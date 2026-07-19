@@ -67,9 +67,12 @@ p, li {
 
 /* === REPLICATED SUBSTACK HEADER STYLE (from https://intranetfromthetrenches.substack.com/) === */
 /* Matches layout, flex structure, height, logo sizes, and colours of the top bar / header item */
+/* UPDATED: Made fully responsive for mobile/tablet (auto height, scaled logo, wrapped actions, reduced paddings) */
+/* FURTHER UPDATED: Logo made bigger on normal+ (desktop/high-res) screens, smaller on low-res (mobile) */
 .top-bar {
   background-color: #ffffff;
-  height: 88px;
+  height: auto;
+  min-height: 96px;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -79,7 +82,8 @@ p, li {
 .top-bar-inner {
   max-width: 1140px;
   margin: 0 auto;
-  height: 88px;
+  height: auto;
+  min-height: 96px;
   display: flex;
   align-items: center;
   padding: 0 20px;
@@ -92,6 +96,7 @@ p, li {
   align-items: center;
   flex-basis: 0px;
   flex-grow: 1;
+  min-width: 0; /* allow shrink */
 }
 
 .logo-container {
@@ -129,12 +134,23 @@ p, li {
   flex-grow: 2;
   display: flex;
   justify-content: center;
+  min-width: 0; /* prevent overflow */
 }
 
 .wordmark {
   max-height: 36px;
   display: block;
   height: auto;
+}
+
+/* Responsive logo image (used by Next Image in header) */
+/* Bigger on normal desktop and higher resolutions; smaller on low-res mobile */
+.logo-image {
+  max-width: 100%;
+  height: auto !important;
+  max-height: 48px;
+  width: auto !important;
+  display: block;
 }
 
 .header-actions {
@@ -763,5 +779,93 @@ footer {
   
   .highlight-icon {
     font-size: 20px;
+  }
+}
+
+/* ========================================
+   HEADER RESPONSIVE ENHANCEMENTS (specific for header+ review)
+   Additional mobile-first rules for top-bar to ensure no overflow,
+   proper scaling of logo image, action buttons wrap nicely,
+   and spacer adjusts height.
+   UPDATED: Logo bigger on desktop/high-res, smaller on low-res.
+   ======================================== */
+
+@media (max-width: 768px) {
+  .top-bar,
+  .top-bar-inner {
+    min-height: 72px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .logo-center {
+    flex-grow: 3; /* give more room to centered logo on narrow screens */
+  }
+
+  .header-actions {
+    min-width: 0;
+  }
+
+  .header-actions .actions {
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+  }
+
+  .btn-tertiary {
+    font-size: 12px;
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+
+  .logo-image {
+    max-height: 32px;
+  }
+
+  /* Responsive spacer for header */
+  .header-spacer {
+    height: 72px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-bar-inner {
+    gap: 8px;
+    padding: 0 12px;
+  }
+
+  .btn-tertiary {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  .logo-image {
+    max-height: 26px;
+  }
+
+  .header-spacer {
+    height: 60px !important;
+  }
+}
+
+/* Ensure header spacer is responsive by default */
+.header-spacer {
+  height: 96px;
+  background-color: #ffffff;
+}
+
+/* Higher resolution / large desktop: make logo even bigger if needed */
+@media (min-width: 1200px) {
+  .logo-image {
+    max-height: 52px;
+  }
+
+  .top-bar,
+  .top-bar-inner {
+    min-height: 100px;
+  }
+
+  .header-spacer {
+    height: 100px;
   }
 }

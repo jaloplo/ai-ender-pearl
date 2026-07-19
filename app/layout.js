@@ -1,9 +1,8 @@
 import './globals.css';
 import { cookies } from 'next/headers';
-import Image from 'next/image';
 
 export const metadata = {
-  title: 'Ender Pearl',
+  title: 'URL Shortener - Intranet from the Trenches',
   description: 'Intranet from the Trenches URL Shortener Application'
 };
 
@@ -17,9 +16,10 @@ export default function RootLayout({ children }) {
       <body>
         {/* Replicated Substack-style header from https://intranetfromthetrenches.substack.com/ */}
         {/* Matches layout (flex 3-col), height 88px, white bg, logo sizes, colours, and structure */}
+        {/* Now made responsive: auto height on mobile, logo scales, actions wrap, smaller paddings */}
         <div className="top-bar">
           <div className="top-bar-inner">
-            {/* Left: small logo + hamburger (menu icon) */}
+            {/* Left: small logo + hamburger (menu icon) - kept for structure, empty for now */}
             <div className="logo-left">
               
             </div>
@@ -30,7 +30,7 @@ export default function RootLayout({ children }) {
                 <h1 id="wordlogo" style={{ margin: 0 }}>
                   <a href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
                     {/* Replicated wordmark: styled text mimicking the image logo (bold, clean, max-height 36px) */}
-                    <Image alt="Intranet from the Trenches" src="/logo.png" width={560} height={140}></Image>
+                    <img src="/logo.png" alt="Intranet from the Trenches" class="logo-image" />
                   </a>
                 </h1>
               </div>
@@ -58,8 +58,8 @@ export default function RootLayout({ children }) {
           </div>
         </div>
 
-        {/* Spacer to account for fixed/sticky header height (matches original page) */}
-        <div style={{ height: '88px', backgroundColor: '#ffffff' }}></div>
+        {/* Spacer to account for fixed/sticky header height (matches original page) - now responsive via CSS */}
+        <div className="header-spacer"></div>
 
         <div className="container">
           <div className="main-content">
