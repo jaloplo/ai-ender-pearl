@@ -21,7 +21,6 @@ export default function RootLayout({ children }) {
           <div className="top-bar-inner">
             {/* Left: small logo + hamburger (menu icon) - kept for structure, empty for now */}
             <div className="logo-left">
-              
             </div>
 
             {/* Center: wordmark logo - main logo replication */}
@@ -30,7 +29,7 @@ export default function RootLayout({ children }) {
                 <h1 id="wordlogo" style={{ margin: 0 }}>
                   <a href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
                     {/* Replicated wordmark: styled text mimicking the image logo (bold, clean, max-height 36px) */}
-                    <img src="/logo.png" alt="Intranet from the Trenches" class="logo-image" />
+                    <img src="/brand_banner.png" alt="Intranet from the Trenches" class="logo-image" />
                   </a>
                 </h1>
               </div>

@@ -866,6 +866,142 @@ footer {
   }
 
   .header-spacer {
-    height: 100px;
+    height: 0px;
+  }
+}
+/* ========================================
+   PROJECT INTRODUCTION
+   Added per request: brief intro on homepage indicating this is part of
+   "Intranet from the Trenches" project + link to the Substack blog.
+   Styled to fit existing retro editorial / Substack-replicated design.
+   ======================================== */
+
+.project-intro {
+  max-width: 720px;
+  margin: 0 auto 60px;
+  padding: 0px 20px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.project-intro p {
+  margin: 0;
+}
+
+.project-intro strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.project-intro a {
+  color: var(--color-brand-accent);
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.project-intro a:hover {
+  color: #0f4a46;
+}
+
+/* Responsive for intro */
+@media (max-width: 768px) {
+  .project-intro {
+    margin: 0 auto 24px;
+    padding: 14px 16px;
+    font-size: 12px;
+  }
+}
+/* ========================================
+   HOME PAGE SPLIT LAYOUT
+   Per user request: Name + description/purpose on LEFT,
+   Textbox + button + result on RIGHT,
+   Everything centered in the middle of the page.
+   ======================================== */
+
+.home-centered {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.home-split {
+  display: flex;
+  gap: 48px;
+  align-items: flex-start;
+}
+
+.left-panel {
+  flex: 1;
+  min-width: 280px;
+}
+
+.left-panel h1 {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 16px 0;
+  color: var(--color-text-primary);
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
+
+.left-panel p {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  margin-bottom: 14px;
+}
+
+.right-panel {
+  flex: 1;
+  min-width: 320px;
+}
+
+/* Make the form and result fit nicely in right panel */
+.right-panel .prominent-form {
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.right-panel .prominent-input {
+  padding: 12px 14px;
+  font-size: 15px;
+  margin-bottom: 14px;
+}
+
+.right-panel .prominent-button {
+  padding: 10px 24px;
+  font-size: 14px;
+  min-width: auto;
+}
+
+.right-panel .result {
+  margin-top: 0;
+  padding: 14px 16px;
+  font-size: 14px;
+}
+
+/* Responsive: stack on mobile, keep centered */
+@media (max-width: 768px) {
+  .home-centered {
+    padding: 24px 16px;
+  }
+
+  .home-split {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .left-panel h1 {
+    font-size: 22px;
+  }
+
+  .left-panel p {
+    font-size: 14px;
+  }
+
+  .right-panel {
+    min-width: 100%;
   }
 }
