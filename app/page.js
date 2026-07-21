@@ -89,7 +89,7 @@ export default function ShortenPage() {
       <div className="home-split">
         {/* Left side: Name, description and purpose */}
         <div className="left-panel">
-          <h1>URL Shortener for 'Intranet from the Trenches'</h1>
+          <h1>URL Shortener for Intranet from the Trenches</h1>
           <p>
             A simple and efficient tool to shorten long URLs, making them easier to share and remember.
           </p>
