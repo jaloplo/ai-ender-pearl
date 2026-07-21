@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function ShortenPage() {
   const [url, setUrl] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [stats, setStats] = useState({ count: 0, example: null });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,6 +39,8 @@ export default function ShortenPage() {
       } else {
         setResult(data);
         setUrl('');
+        // Refresh stats after successful shorten
+        fetchStats();
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -43,6 +48,27 @@ export default function ShortenPage() {
       setLoading(false);
     }
   };
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch('/api/public-stats');
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
+    } catch (e) {
+      // keep previous or default
+    }
+  };
+
+  useEffect(() => {
+    const loadStats = async () => {
+      setStatsLoading(true);
+      await fetchStats();
+      setStatsLoading(false);
+    };
+    loadStats();
+  }, []);
 
   return (
     <div className="home-centered">
@@ -97,6 +123,29 @@ export default function ShortenPage() {
               <strong>Code:</strong> {result.id}<br />
               <span className="metadata">Created: {new Date(result.created).toLocaleString()}</span>
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* New row after the main split: stats on number of shortened URLs + example */}
+      <div className="stats-row">
+        <div className="stats-content">
+          {statsLoading ? (
+            <span>Loading usage stats...</span>
+          ) : (
+            <>
+              <strong>{stats.count} URLs already shortened</strong>
+              {stats.example && (
+                <div className="stats-example">
+                  Example: <a href={stats.example.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">{stats.example.shortUrl}</a>
+                  <br />
+                  <span className="metadata">Original: {stats.example.original}</span>
+                </div>
+              )}
+              {stats.count === 0 && (
+                <span className="metadata">Be the first to shorten a URL!</span>
+              )}
+            </>
           )}
         </div>
       </div>

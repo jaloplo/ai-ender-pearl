@@ -60,7 +60,7 @@ p, li {
 }
 
 .main-content {
-  max-width: 720px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 48px 0;
 }
@@ -1003,5 +1003,107 @@ footer {
 
   .right-panel {
     min-width: 100%;
+  }
+}
+
+/* ========================================
+   HOME PAGE WIDER COLUMNS + BORDERLESS SHORTENER + STATS ROW
+   Per user request:
+   - Make both columns wider for higher resolution approach
+   - Remove border line in the shortener box
+   - New row after main split for shortened URLs count + example
+   ======================================== */
+
+.home-centered {
+  max-width: 1280px; /* wider for higher resolution */
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.home-split {
+  display: flex;
+  gap: 64px; /* slightly larger gap for wider layout */
+  align-items: flex-start;
+}
+
+.left-panel {
+  flex: 1.1; /* slightly wider proportion */
+  min-width: 340px;
+}
+
+.right-panel {
+  flex: 1.1;
+  min-width: 380px;
+}
+
+/* Remove border line in the shortener box (prominent-form) */
+.right-panel .prominent-form,
+.prominent-form {
+  border: none !important;
+  box-shadow: none;
+  background-color: var(--color-bg-secondary);
+}
+
+/* New stats row after the main split */
+.stats-row {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border-subtle);
+  max-width: 100%;
+}
+
+.stats-content {
+  font-size: 15px;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+  padding: 16px 20px;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+
+.stats-content strong {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.stats-example {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.stats-example .short-url {
+  font-size: 13px;
+}
+
+/* Responsive adjustments for wider layout */
+@media (max-width: 1024px) {
+  .home-centered {
+    max-width: 960px;
+  }
+  .home-split {
+    gap: 48px;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-centered {
+    padding: 24px 16px;
+    max-width: 100%;
+  }
+
+  .home-split {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .left-panel,
+  .right-panel {
+    min-width: 100%;
+    flex: none;
+  }
+
+  .stats-row {
+    margin-top: 32px;
   }
 }

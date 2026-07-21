@@ -90,3 +90,19 @@
 * **Context:** User request to restructure the home page: place the app name ("URL Shortener for 'Intranet from the Trenches'") and description/purpose on the left side; place the textbox, button, and shortening result on the right side; center everything in the middle of the page.
 * **Decision:** Refactored `app/page.js` to use a flex-based split layout (`.home-split` with `.left-panel` and `.right-panel`). Moved descriptive content (h1 name + multiple purpose paragraphs) to left, form + result display to right. Added supporting CSS in `app/globals.css` (`.home-centered`, split rules, panel styles, responsive stack on mobile). Preserved all shortening logic, state, error handling, and result rendering. Removed prior section wrappers that conflicted with new layout. No changes to layout.js, APIs, auth, or other pages.
 * **Consequences:** Achieves the exact requested visual structure (left info, right interactive + results, overall centered). Maintains full functionality and retro "Intranet from the Trenches" styling. Responsive fallback stacks panels vertically on small screens. Minor presentational change only; backward compatible with existing features. Added reasoning.md and this ADR entry.
+
+## 16. Homepage Wider Columns, Borderless Shortener Box, and Stats Row
+* **Date:** 2024-10-29
+* **Context:** User request to enhance the home page split layout: make both columns wider for higher resolution screens, remove the border line from the shortener box (prominent-form), and add a new row after the main split containing a component that shows the number of URLs already shortened plus one example of a shortened URL.
+* **Decision:** 
+  - Updated `app/page.js` to include React state/effect for fetching public stats, refresh after shorten, and render a new `.stats-row` component below the `.home-split`.
+  - Created new public API endpoint `app/api/public-stats/route.js` (GET) that returns `{ count, example }` using existing `readUrls()` (file or Cosmos) and security helpers.
+  - Appended targeted CSS rules to `app/globals.css` for wider container (1280px), adjusted flex proportions/gaps, `border: none` on `.prominent-form`, and full styling for the new stats row (with responsive rules).
+  - Preserved all shortening logic, prior split layout, retro "Intranet from the Trenches" styling, and auth/API boundaries.
+* **Consequences:** 
+  - Homepage now feels more spacious on high-res displays while remaining responsive.
+  - Shortener form is cleaner (no border).
+  - New public teaser stats row provides immediate social proof and example usage (auto-refreshes on shorten).
+  - Lightweight new API follows existing patterns (security, lib abstraction) without requiring auth.
+  - Minor increase in client-side fetches and CSS size; fully backward compatible. No impact on list page, auth, or backend.
+  - Added reasoning.md and this ADR entry #16. New reusable "public stats teaser" pattern established for landing pages.
