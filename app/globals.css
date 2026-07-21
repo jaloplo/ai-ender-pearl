@@ -1107,3 +1107,101 @@ footer {
     margin-top: 32px;
   }
 }
+
+/* ========================================
+   ANONYMOUS USAGE STATS DASHBOARD TEASER + RECENT PUBLIC SHORTENED URLs
+   Added per feature request for public homepage.
+   Uses existing .stats-row / .stats-content classes for consistency.
+   Retro editorial / Substack palette.
+   ======================================== */
+
+.stats-teaser,
+.recent-section {
+  margin-top: 16px;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.stat-card {
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 4px;
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.1;
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.recent-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recent-item {
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 6px 0;
+  border-bottom: 1px dotted var(--color-border-subtle);
+}
+
+.recent-item:last-child {
+  border-bottom: none;
+}
+
+.recent-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.original-link {
+  color: var(--color-text-primary);
+  word-break: break-all;
+}
+
+.recent-item .short-url {
+  font-size: 13px;
+}
+
+/* Responsive for new stats cards and recent list */
+@media (max-width: 768px) {
+  .stats-cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .recent-item {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+}

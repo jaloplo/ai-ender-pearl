@@ -8,7 +8,7 @@ export default function ShortenPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const [stats, setStats] = useState({ count: 0, example: null });
+  const [stats, setStats] = useState({ count: 0, recent: [], uniqueDomains: 0, thisMonth: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
 
   const handleSubmit = async (e) => {
@@ -54,7 +54,12 @@ export default function ShortenPage() {
       const res = await fetch('/api/public-stats');
       if (res.ok) {
         const data = await res.json();
-        setStats(data);
+        setStats({
+          count: data.count || 0,
+          recent: data.recent || [],
+          uniqueDomains: data.uniqueDomains || 0,
+          thisMonth: data.thisMonth || 0,
+        });
       }
     } catch (e) {
       // keep previous or default
@@ -69,6 +74,15 @@ export default function ShortenPage() {
     };
     loadStats();
   }, []);
+
+  const formatTimestamp = (iso) => {
+    if (!iso) return '';
+    try {
+      return new Date(iso).toLocaleString();
+    } catch {
+      return iso;
+    }
+  };
 
   return (
     <div className="home-centered">
@@ -127,25 +141,58 @@ export default function ShortenPage() {
         </div>
       </div>
 
-      {/* New row after the main split: stats on number of shortened URLs + example */}
-      <div className="stats-row">
+      {/* Feature: Anonymous Usage Stats Dashboard Teaser - visual cards below stats-row */}
+      <div className="stats-row stats-teaser">
         <div className="stats-content">
+          <strong>Community Stats</strong>
+          <div className="stats-cards">
+            <div className="stat-card">
+              <div className="stat-value">{stats.count}</div>
+              <div className="stat-label">Total Links Created</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.uniqueDomains}</div>
+              <div className="stat-label">Unique Domains</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.thisMonth}</div>
+              <div className="stat-label">Created This Month</div>
+            </div>
+          </div>
+          {stats.count === 0 && (
+            <span className="metadata">No data yet — start shortening to populate stats!</span>
+          )}
+        </div>
+      </div>
+
+      {/* Feature: Recent Public Shortened URLs - new section below stats-row using existing CSS classes for consistency */}
+      <div className="stats-row recent-section">
+        <div className="stats-content">
+          <strong>Recent Public Shortened URLs</strong>
           {statsLoading ? (
-            <span>Loading usage stats...</span>
-          ) : (
-            <>
-              <strong>{stats.count} URLs already shortened</strong>
-              {stats.example && (
-                <div className="stats-example">
-                  Example: <a href={stats.example.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">{stats.example.shortUrl}</a>
-                  <br />
-                  <span className="metadata">Original: {stats.example.original}</span>
+            <span className="metadata">Loading recent links...</span>
+          ) : stats.recent && stats.recent.length > 0 ? (
+            <div className="recent-list">
+              {stats.recent.map((item, index) => (
+                <div key={index} className="recent-item">
+                  <a 
+                    href={item.shortUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="short-url"
+                  >
+                    {item.shortUrl}
+                  </a>
+                  <span className="recent-meta">
+                    {' → '}
+                    <span className="original-link">{item.original}</span>
+                    <span className="metadata"> • {formatTimestamp(item.created)}</span>
+                  </span>
                 </div>
-              )}
-              {stats.count === 0 && (
-                <span className="metadata">Be the first to shorten a URL!</span>
-              )}
-            </>
+              ))}
+            </div>
+          ) : (
+            <span className="metadata">No recent URLs yet. Shorten one to see it here!</span>
           )}
         </div>
       </div>

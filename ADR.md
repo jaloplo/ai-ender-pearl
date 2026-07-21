@@ -106,3 +106,18 @@
   - Lightweight new API follows existing patterns (security, lib abstraction) without requiring auth.
   - Minor increase in client-side fetches and CSS size; fully backward compatible. No impact on list page, auth, or backend.
   - Added reasoning.md and this ADR entry #16. New reusable "public stats teaser" pattern established for landing pages.
+
+## 17. Recent Public Shortened URLs and Anonymous Usage Stats Dashboard Teaser
+* **Date:** 2024-10-29
+* **Context:** User request to implement two new public homepage features for anonymous visitors: (1) "Recent Public Shortened URLs" (list of up to 5 most recent short links with originals + timestamps) and (2) "Anonymous Usage Stats Dashboard Teaser" (aggregated public stats: total links, unique domains, monthly growth teaser). Business goals: engagement, social proof, trust without auth. Technical blueprint specified modifying app/page.js + extending /api/public-stats (or reuse); add sections below existing stats-row using current CSS classes.
+* **Decision:** 
+  - Enhanced `app/api/public-stats/route.js` (GET) to return extended payload: `{ count, recent: [{id,original,shortUrl,created}, ...] (top 5 by created desc), uniqueDomains, thisMonth }`. Reuses `readUrls()` (file + Cosmos), adds sorting/domain extraction/month calc. Security unchanged.
+  - Updated `app/page.js`: extended stats state + fetchStats() to consume new fields; kept existing `.stats-row` for count; added two new `.stats-row` sections below it (`.stats-teaser` with 3 `.stat-card` grid for totals/domains/month; `.recent-section` with `.recent-list` of short→original+timestamp). Dynamic refresh via fetch after successful shorten. Zero-data graceful messages. Pure JSX, no new components.
+  - Appended targeted CSS to `app/globals.css` (`.stats-cards`, `.stat-card`, `.recent-list`/`.recent-item`) reusing existing vars, .stats-content, .metadata, .short-url for visual consistency with retro/Substack style.
+  - Preserved 100% of prior homepage (split layout ADR#15, stats ADR#16, shortening, responsiveness, auth boundaries).
+* **Consequences:** 
+  - Homepage now delivers both requested features to unauthenticated users with dynamic updates and zero-state handling.
+  - Lightweight extension of existing public-stats API and client fetch pattern (reusable for future teasers).
+  - Full visual/functional consistency; no impact on protected /list, auth, or backend storage.
+  - Minor increase in API response size and client markup/CSS.
+  - Added reasoning.md and this ADR entry #17. Establishes "public stats + recent list" pattern for landing pages.
