@@ -61,6 +61,12 @@ export function isAllowedOrigin(request) {
       if (publicVercel && originHost === publicVercel.toLowerCase()) {
         return true;
       }
+
+      // URL Shortener chrome extension
+      const chromeExtensionId = 'bpkjlnfpcoiibgbnacnopoebapkdkngn';
+      if(originHeader === `chrome-extension://${chromeExtensionId}`) {
+        return true;
+      }
     } catch (e) {
       // invalid URL, skip
     }
