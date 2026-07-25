@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
                 <h1 id="wordlogo" style={{ margin: 0 }}>
                   <a href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
                     {/* Replicated wordmark: styled text mimicking the image logo (bold, clean, max-height 36px) */}
-                    <img src="/brand_banner.png" alt="Intranet from the Trenches" class="logo-image" />
+                    <img src="/brand_banner.png" alt="Intranet from the Trenches" className="logo-image" />
                   </a>
                 </h1>
               </div>
