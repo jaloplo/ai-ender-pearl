@@ -109,13 +109,14 @@ export async function readUrls() {
       });
     }
 
-    // Return in the same shape as file-based: array of {id, original, created, stats, qrCode}
+    // Return in the same shape as file-based: array of {id, original, created, stats, qrCode, private}
     return docs.map((doc) => ({
       id: doc.id,
       original: doc.original,
       created: doc.created,
       stats: statsByShort[doc.id] || [],
       qrCode: doc.qrCode || null,
+      private: !!doc.private,  // default to public (false) if absent
     }));
   } catch (error) {
     console.error('Cosmos MongoDB readUrls error:', error);
@@ -134,7 +135,7 @@ export async function saveUrls(shorts) {
   for (const item of shorts) {
     await coll.updateOne(
       { id: item.id },
-      { $set: { id: item.id, original: item.original, created: item.created, qrCode: item.qrCode || null } },
+      { $set: { id: item.id, original: item.original, created: item.created, qrCode: item.qrCode || null, private: !!item.private } },
       { upsert: true }
     );
   }
@@ -165,6 +166,7 @@ export async function findUrlByShort(short) {
       created: doc.created,
       stats,
       qrCode: doc.qrCode || null,
+      private: !!doc.private,
     };
   } catch (error) {
     console.error('Cosmos MongoDB findUrlByShort error:', error);
@@ -172,7 +174,7 @@ export async function findUrlByShort(short) {
   }
 }
 
-export async function addShortUrl(originalUrl) {
+export async function addShortUrl(originalUrl, isPrivate = false) {
   const coll = await getUrlsCollection();
   const shorts = await readUrls();
 
@@ -207,6 +209,7 @@ export async function addShortUrl(originalUrl) {
     original: originalUrl,
     created: new Date().toISOString(),
     qrCode,
+    private: !!isPrivate,
     // stats stored separately in 'stats' collection
   };
 
@@ -234,6 +237,24 @@ export async function logAccess(short, accessInfo) {
   } catch (error) {
     console.error('Cosmos MongoDB logAccess error:', error);
     return false;
+  }
+}
+
+export async function updateUrlVisibility(short, isPrivate) {
+  try {
+    const coll = await getUrlsCollection();
+    const result = await coll.updateOne(
+      { id: short },
+      { $set: { private: !!isPrivate } }
+    );
+    if (result.matchedCount === 0) {
+      return null;
+    }
+    // Return the updated item (re-fetch for consistency)
+    return await findUrlByShort(short);
+  } catch (error) {
+    console.error('Cosmos MongoDB updateUrlVisibility error:', error);
+    return null;
   }
 }
 

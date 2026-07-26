@@ -31,6 +31,7 @@ export async function GET(request, { params }) {
       accessCount,
       stats: stats, // array of {timestamp, ip, userAgent, referer}
       qrCode: entry.qrCode || null,
+      private: !!entry.private,
     });
   } catch (error) {
     console.error('Stats error:', error);

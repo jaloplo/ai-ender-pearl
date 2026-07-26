@@ -10,6 +10,7 @@ export default function ListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
 
   const CACHE_KEY = 'urlShortenerCache';
   const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -102,6 +103,60 @@ export default function ListPage() {
     fetchUrls(true);
   };
 
+  const handleToggleVisibility = async (item) => {
+    setUpdatingId(item.id);
+    setError('');
+
+    try {
+      const newPrivate = !item.private;
+
+      const response = await fetch(`/api/urls/${item.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ private: newPrivate }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          window.location.href = '/login';
+          return;
+        }
+        setError(data.error || 'Failed to update visibility');
+      } else {
+        // Update local state immediately
+        setItems(prevItems =>
+          prevItems.map(i =>
+            i.id === item.id ? { ...i, private: data.private } : i
+          )
+        );
+
+        // Also update the browser cache to keep it in sync
+        const cachedStr = localStorage.getItem(CACHE_KEY);
+        if (cachedStr) {
+          try {
+            const cached = JSON.parse(cachedStr);
+            if (cached.items) {
+              cached.items = cached.items.map(i =>
+                i.id === item.id ? { ...i, private: data.private } : i
+              );
+              localStorage.setItem(CACHE_KEY, JSON.stringify(cached));
+            }
+          } catch (e) {
+            // ignore cache parse errors
+          }
+        }
+      }
+    } catch (err) {
+      setError('Failed to update visibility. Is the server running?');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -111,6 +166,7 @@ export default function ListPage() {
       <p>
         Below is a list of all URLs that have been shortened. Data is persisted using Cosmos DB (MongoDB API) or local file system.
         Results are cached in your browser for faster loading. Click Stats to view detailed access logs (admin only).
+        Private URLs are not shown in public stats or recent lists.
       </p>
 
       {/* Search box for original URLs */}
@@ -194,6 +250,7 @@ export default function ListPage() {
                 <th>Shortened URL</th>
                 <th>Original URL</th>
                 <th>Created</th>
+                <th>Visibility</th>
                 <th>Accesses</th>
                 <th>Actions</th>
               </tr>
@@ -213,11 +270,31 @@ export default function ListPage() {
                     </a>
                   </td>
                   <td className="metadata">{new Date(item.created).toLocaleString()}</td>
+                  <td>
+                    <span style={{
+                      padding: '2px 6px',
+                      borderRadius: '3px',
+                      fontSize: '12px',
+                      backgroundColor: item.private ? '#fee2e2' : '#dcfce7',
+                      color: item.private ? '#991b1b' : '#166534',
+                      border: `1px solid ${item.private ? '#fecaca' : '#bbf7d0'}`
+                    }}>
+                      {item.private ? 'Private' : 'Public'}
+                    </span>
+                  </td>
                   <td>{item.accessCount ?? 0}</td>
                   <td>
                     <a href={`/stats/${item.id}`} className="btn-tertiary" style={{ padding: '2px 8px', fontSize: '12px' }}>
                       View Stats
                     </a>
+                    <button
+                      onClick={() => handleToggleVisibility(item)}
+                      disabled={updatingId === item.id || loading}
+                      className="secondary"
+                      style={{ padding: '2px 8px', fontSize: '12px', marginLeft: '4px' }}
+                    >
+                      {updatingId === item.id ? 'Saving...' : (item.private ? 'Make Public' : 'Make Private')}
+                    </button>
                   </td>
                 </tr>
               ))}

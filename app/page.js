@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 
 export default function ShortenPage() {
   const [url, setUrl] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,7 @@ export default function ShortenPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify({ url: url.trim(), private: isPrivate }),
       });
       
       const data = await response.json();
@@ -39,6 +40,7 @@ export default function ShortenPage() {
       } else {
         setResult(data);
         setUrl('');
+        setIsPrivate(false); // reset to default public
         // Refresh stats after successful shorten
         fetchStats();
       }
@@ -115,6 +117,24 @@ export default function ShortenPage() {
               disabled={loading}
               className="prominent-input"
             />
+
+            {/* Privacy selection: checkbox, default unchecked = public */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={isPrivate}
+                  onChange={(e) => setIsPrivate(e.target.checked)}
+                  disabled={loading}
+                  style={{ marginRight: '8px' }}
+                />
+                Make private (not shown in public stats or recent lists)
+              </label>
+              <span className="metadata" style={{ fontSize: '12px', marginLeft: '24px', display: 'block' }}>
+                Default: public
+              </span>
+            </div>
+
             <button type="submit" disabled={loading} className="prominent-button">
               {loading ? 'Shortening...' : 'Shorten URL'}
             </button>
@@ -135,6 +155,7 @@ export default function ShortenPage() {
               <br /><br />
               <strong>Original:</strong> {result.original}<br />
               <strong>Code:</strong> {result.id}<br />
+              <strong>Visibility:</strong> {result.private ? 'Private' : 'Public'}<br />
               <span className="metadata">Created: {new Date(result.created).toLocaleString()}</span>
 
               {/* QR Code display - shown together with shortened URL. Larger size to showcase maximized logo. */}
@@ -167,7 +188,7 @@ export default function ShortenPage() {
       {/* Feature: Anonymous Usage Stats Dashboard Teaser - visual cards below stats-row */}
       <div className="stats-row stats-teaser">
         <div className="stats-content">
-          <strong>Community Stats</strong>
+          <strong>Community Stats (Public URLs only)</strong>
           <div className="stats-cards">
             <div className="stat-card">
               <div className="stat-value">{stats.count}</div>

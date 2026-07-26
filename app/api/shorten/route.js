@@ -9,7 +9,7 @@ export async function POST(request) {
   }
 
   try {
-    const { url } = await request.json();
+    const { url, private: isPrivate = false } = await request.json();
     
     if (!url) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
@@ -23,7 +23,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
     }
     
-    const entry = await addShortUrl(validUrl.toString());
+    const entry = await addShortUrl(validUrl.toString(), !!isPrivate);
     
     const shortUrl = `${request.nextUrl.origin}/${entry.id}`;
     
@@ -33,6 +33,7 @@ export async function POST(request) {
       shortUrl: shortUrl,
       created: entry.created,
       qrCode: entry.qrCode || null,
+      private: !!entry.private,
     });
   } catch (error) {
     console.error('Shorten error:', error);

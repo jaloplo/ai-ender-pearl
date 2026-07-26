@@ -9,7 +9,10 @@ export async function GET(request) {
   }
 
   try {
-    const shorts = await readUrls();
+    const allShorts = await readUrls();
+    // Only public URLs (private: false or absent) are shown in public stats/recent
+    const shorts = allShorts.filter(item => !item.private);
+
     const count = shorts.length;
 
     // Sort by created desc to get most recent first
@@ -27,7 +30,7 @@ export async function GET(request) {
       created: item.created,
     }));
 
-    // Compute unique domains from originals
+    // Compute unique domains from originals (public only)
     const domains = new Set();
     shorts.forEach((s) => {
       try {
@@ -41,7 +44,7 @@ export async function GET(request) {
     });
     const uniqueDomains = domains.size;
 
-    // Monthly growth teaser: count created this calendar month
+    // Monthly growth teaser: count created this calendar month (public only)
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const thisMonth = shorts.filter((s) => {

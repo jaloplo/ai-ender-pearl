@@ -14,11 +14,12 @@ async function readUrlsFile() {
     const data = await fs.readFile(DATA_FILE, 'utf-8');
     const parsed = JSON.parse(data);
     const shorts = parsed.shorts || [];
-    // Normalize to always include stats array and qrCode for backward compat
+    // Normalize to always include stats array, qrCode, and private flag for backward compat
     return shorts.map(item => ({
       ...item,
       stats: item.stats || [],
       qrCode: item.qrCode || null,
+      private: !!item.private,  // default to public (false) if absent
     }));
   } catch (error) {
     // If file doesn't exist or invalid, return empty
@@ -45,7 +46,7 @@ async function findUrlByShortFile(short) {
   return shorts.find(item => item.id === short);
 }
 
-async function addShortUrlFile(originalUrl) {
+async function addShortUrlFile(originalUrl, isPrivate = false) {
   const shorts = await readUrlsFile();
   
   // Check if already exists
@@ -79,6 +80,7 @@ async function addShortUrlFile(originalUrl) {
     created: new Date().toISOString(),
     stats: [],
     qrCode,
+    private: !!isPrivate,
   };
   
   shorts.push(newEntry);
@@ -104,6 +106,17 @@ async function logAccessFile(short, accessInfo) {
   });
   await saveUrlsFile(shorts);
   return true;
+}
+
+async function updateUrlVisibilityFile(short, isPrivate) {
+  const shorts = await readUrlsFile();
+  const idx = shorts.findIndex(item => item.id === short);
+  if (idx === -1) {
+    return null;
+  }
+  shorts[idx].private = !!isPrivate;
+  await saveUrlsFile(shorts);
+  return shorts[idx];
 }
 
 // Public API - delegates to Cosmos (MongoDB API) or file storage
@@ -132,11 +145,11 @@ export async function findUrlByShort(short) {
   return findUrlByShortFile(short);
 }
 
-export async function addShortUrl(originalUrl) {
+export async function addShortUrl(originalUrl, isPrivate = false) {
   if (useCosmos) {
-    return cosmos.addShortUrl(originalUrl);
+    return cosmos.addShortUrl(originalUrl, isPrivate);
   }
-  return addShortUrlFile(originalUrl);
+  return addShortUrlFile(originalUrl, isPrivate);
 }
 
 export async function logAccess(short, accessInfo) {
@@ -144,4 +157,11 @@ export async function logAccess(short, accessInfo) {
     return cosmos.logAccess(short, accessInfo);
   }
   return logAccessFile(short, accessInfo);
+}
+
+export async function updateUrlVisibility(short, isPrivate) {
+  if (useCosmos) {
+    return cosmos.updateUrlVisibility(short, isPrivate);
+  }
+  return updateUrlVisibilityFile(short, isPrivate);
 }

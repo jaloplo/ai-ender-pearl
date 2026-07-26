@@ -127,3 +127,19 @@
 * **Decision:** Modified `app/lib/qr.js` (the QR generator using qrcode + jimp): switched from `public/qr_logo.png` to the existing project `public/brand_logo.png` (used in header). Maximized logo footprint to ~33% of QR width (was 22%), increased base QR width to 400px, and introduced a white square background pad composited underneath the logo to clear modules and allow larger safe overlay. Updated QR preview size + caption in `app/page.js`. All generation paths (file + Cosmos via urls.js/cosmos.js) benefit automatically. No changes to other files or behavior.
 * **Consequences:** QR codes now feature a much larger, more prominent logo (visually dominant center) while remaining scannable thanks to high ECC level 'H' and padding. Eliminates dependency on dedicated qr_logo.png (uses shared brand asset for consistency). Display updated to showcase the change. Fully backward compatible; no impact on shortening, stats, auth, UI layout, or retro styling. Minor increase in QR image resolution. Added reasoning.md + this ADR entry #18.
 
+## 19. URL Visibility Toggle Button in List Page
+* **Date:** 2024-10-31
+* **Context:** User request to "Include a new button in the URLs list page for each URL to change it to public or private. It must be a unique button that will save the new status automatically." Prior work had introduced the `private` flag for creation and display (ADR #19 context), but no post-creation toggle existed in the protected list UI.
+* **Decision:** 
+  - Extended data layer: added `updateUrlVisibility(short, isPrivate)` to `app/lib/urls.js` (file impl) and `app/lib/cosmos.js` (Mongo update + re-fetch).
+  - Created new protected PATCH endpoint `app/api/urls/[id]/route.js` (validates origin/security, accepts boolean `private`, returns enriched item).
+  - Updated `app/list/page.js`: added `updatingId` state, `handleToggleVisibility` async handler (PATCH call, optimistic state + localStorage cache sync, auth redirect on 401/403), and unique per-row `<button>` in Actions column ("Make Public" / "Make Private" text, disabled during save).
+  - Reused existing styles, error handling, and list enhancements (search/paging).
+* **Consequences:** 
+  - Admins can now instantly toggle visibility for any URL directly from the list (auto-saves, no extra UI steps).
+  - Immediate UI feedback and cache consistency; private flag now fully mutable post-creation.
+  - Public stats/recent lists continue to exclude private URLs (unchanged).
+  - Fully backward compatible; no impact on shorten flow, redirects, auth, or other pages.
+  - New pattern: PATCH update endpoint + per-item mutation buttons for list UIs.
+  - Added reasoning.md and this ADR entry #19. All prior ADRs and retro "Intranet from the Trenches" styling preserved.
+
