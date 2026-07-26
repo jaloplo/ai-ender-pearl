@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import * as cosmos from './cosmos';
+import { generateQrCodeWithLogo } from './qr';
 
 // Detect if Cosmos DB (MongoDB API) is configured via env vars
 const useCosmos = !!process.env.COSMOS_MONGODB_URI;
@@ -13,10 +14,11 @@ async function readUrlsFile() {
     const data = await fs.readFile(DATA_FILE, 'utf-8');
     const parsed = JSON.parse(data);
     const shorts = parsed.shorts || [];
-    // Normalize to always include stats array for backward compat
+    // Normalize to always include stats array and qrCode for backward compat
     return shorts.map(item => ({
       ...item,
       stats: item.stats || [],
+      qrCode: item.qrCode || null,
     }));
   } catch (error) {
     // If file doesn't exist or invalid, return empty
@@ -49,6 +51,12 @@ async function addShortUrlFile(originalUrl) {
   // Check if already exists
   const existing = shorts.find(item => item.original === originalUrl);
   if (existing) {
+    // If existing but no qrCode, generate one now (backfill)
+    if (!existing.qrCode) {
+      const shortUrlForQr = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${existing.id}`;
+      existing.qrCode = await generateQrCodeWithLogo(shortUrlForQr);
+      await saveUrlsFile(shorts);
+    }
     return existing;
   }
   
@@ -62,11 +70,15 @@ async function addShortUrlFile(originalUrl) {
     }
   } while (shorts.some(item => item.id === shortCode));
   
+  const shortUrlForQr = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${shortCode}`;
+  const qrCode = await generateQrCodeWithLogo(shortUrlForQr);
+
   const newEntry = {
     id: shortCode,
     original: originalUrl,
     created: new Date().toISOString(),
     stats: [],
+    qrCode,
   };
   
   shorts.push(newEntry);

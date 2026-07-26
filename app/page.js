@@ -136,6 +136,29 @@ export default function ShortenPage() {
               <strong>Original:</strong> {result.original}<br />
               <strong>Code:</strong> {result.id}<br />
               <span className="metadata">Created: {new Date(result.created).toLocaleString()}</span>
+
+              {/* QR Code display - shown together with shortened URL */}
+              {result.qrCode && (
+                <div style={{ marginTop: '16px' }}>
+                  <strong>QR Code</strong>
+                  <div style={{ marginTop: '8px' }}>
+                    <img 
+                      src={result.qrCode} 
+                      alt={`QR code for ${result.shortUrl}`} 
+                      style={{ 
+                        width: '180px', 
+                        height: '180px', 
+                        border: '1px solid var(--color-border-subtle)',
+                        borderRadius: '4px',
+                        background: '#fff'
+                      }} 
+                    />
+                  </div>
+                  <span className="metadata" style={{ fontSize: '11px' }}>
+                    Scan to open • Logo: Intranet from the Trenches • Color: #66cd7a
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>

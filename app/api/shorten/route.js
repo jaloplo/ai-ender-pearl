@@ -32,6 +32,7 @@ export async function POST(request) {
       original: entry.original,
       shortUrl: shortUrl,
       created: entry.created,
+      qrCode: entry.qrCode || null,
     });
   } catch (error) {
     console.error('Shorten error:', error);

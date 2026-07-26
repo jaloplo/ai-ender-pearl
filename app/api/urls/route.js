@@ -17,6 +17,7 @@ export async function GET(request) {
       ...item,
       shortUrl: `${origin}/${item.id}`,
       accessCount: (item.stats || []).length,
+      qrCode: item.qrCode || null,
     }));
     
     return NextResponse.json({ items });

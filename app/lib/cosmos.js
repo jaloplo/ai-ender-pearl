@@ -16,9 +16,12 @@
  * Stats are stored in a separate 'stats' collection (as per requirement), each stat document:
  * { short: "abc123", timestamp, ip, userAgent, referer }
  * When reading URLs, stats are joined/attached from the stats collection.
+ *
+ * QR codes are stored directly on the URL document as base64 PNG data URL (qrCode field).
  */
 
 import { MongoClient } from 'mongodb';
+import { generateQrCodeWithLogo } from './qr';
 
 let client = null;
 let db = null;
@@ -106,12 +109,13 @@ export async function readUrls() {
       });
     }
 
-    // Return in the same shape as file-based: array of {id, original, created, stats}
+    // Return in the same shape as file-based: array of {id, original, created, stats, qrCode}
     return docs.map((doc) => ({
       id: doc.id,
       original: doc.original,
       created: doc.created,
       stats: statsByShort[doc.id] || [],
+      qrCode: doc.qrCode || null,
     }));
   } catch (error) {
     console.error('Cosmos MongoDB readUrls error:', error);
@@ -130,7 +134,7 @@ export async function saveUrls(shorts) {
   for (const item of shorts) {
     await coll.updateOne(
       { id: item.id },
-      { $set: { id: item.id, original: item.original, created: item.created } },
+      { $set: { id: item.id, original: item.original, created: item.created, qrCode: item.qrCode || null } },
       { upsert: true }
     );
   }
@@ -160,6 +164,7 @@ export async function findUrlByShort(short) {
       original: doc.original,
       created: doc.created,
       stats,
+      qrCode: doc.qrCode || null,
     };
   } catch (error) {
     console.error('Cosmos MongoDB findUrlByShort error:', error);
@@ -174,6 +179,12 @@ export async function addShortUrl(originalUrl) {
   // Check if already exists (by original)
   const existing = shorts.find((item) => item.original === originalUrl);
   if (existing) {
+    // backfill qr if missing
+    if (!existing.qrCode) {
+      const shortUrlForQr = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${existing.id}`;
+      existing.qrCode = await generateQrCodeWithLogo(shortUrlForQr);
+      await coll.updateOne({ id: existing.id }, { $set: { qrCode: existing.qrCode } });
+    }
     return existing;
   }
 
@@ -188,10 +199,14 @@ export async function addShortUrl(originalUrl) {
     }
   } while (shorts.some((item) => item.id === shortCode) || (await findUrlByShort(shortCode)));
 
+  const shortUrlForQr = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${shortCode}`;
+  const qrCode = await generateQrCodeWithLogo(shortUrlForQr);
+
   const newEntry = {
     id: shortCode,
     original: originalUrl,
     created: new Date().toISOString(),
+    qrCode,
     // stats stored separately in 'stats' collection
   };
 

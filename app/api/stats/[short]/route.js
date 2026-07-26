@@ -30,6 +30,7 @@ export async function GET(request, { params }) {
       created: entry.created,
       accessCount,
       stats: stats, // array of {timestamp, ip, userAgent, referer}
+      qrCode: entry.qrCode || null,
     });
   } catch (error) {
     console.error('Stats error:', error);
