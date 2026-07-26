@@ -121,3 +121,9 @@
   - Full visual/functional consistency; no impact on protected /list, auth, or backend storage.
   - Minor increase in API response size and client markup/CSS.
   - Added reasoning.md and this ADR entry #17. Establishes "public stats + recent list" pattern for landing pages.
+## 18. Maximize Logo in QR Codes + Switch to Brand Logo Asset
+* **Date:** 2024-10-30
+* **Context:** User request to "Integrate the logo in the QR code to occupy as much space as possible" and "Don't use the qr_logo.png image if not needed".
+* **Decision:** Modified `app/lib/qr.js` (the QR generator using qrcode + jimp): switched from `public/qr_logo.png` to the existing project `public/brand_logo.png` (used in header). Maximized logo footprint to ~33% of QR width (was 22%), increased base QR width to 400px, and introduced a white square background pad composited underneath the logo to clear modules and allow larger safe overlay. Updated QR preview size + caption in `app/page.js`. All generation paths (file + Cosmos via urls.js/cosmos.js) benefit automatically. No changes to other files or behavior.
+* **Consequences:** QR codes now feature a much larger, more prominent logo (visually dominant center) while remaining scannable thanks to high ECC level 'H' and padding. Eliminates dependency on dedicated qr_logo.png (uses shared brand asset for consistency). Display updated to showcase the change. Fully backward compatible; no impact on shortening, stats, auth, UI layout, or retro styling. Minor increase in QR image resolution. Added reasoning.md + this ADR entry #18.
+
