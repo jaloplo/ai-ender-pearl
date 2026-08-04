@@ -38,6 +38,8 @@ export async function PATCH(request, { params }) {
       accessCount: (updated.stats || []).length,
       qrCode: updated.qrCode || null,
       private: !!updated.private,
+      expiresAt: updated.expiresAt || null,
+      maxClicks: updated.maxClicks != null ? updated.maxClicks : null,
     });
   } catch (error) {
     console.error('Update visibility error:', error);

@@ -83,7 +83,7 @@ export default function StatsPage() {
     return <p>No data.</p>;
   }
 
-  const { id, original, created, accessCount, stats, title } = data;
+  const { id, original, created, accessCount, stats, title, expiresAt, maxClicks } = data;
 
   // Display title or original URL in the header
   const displayName = title || original;
@@ -164,6 +164,23 @@ export default function StatsPage() {
               </div>
               <div className="stat-label">Created</div>
             </div>
+            {expiresAt && (
+              <div className="stat-card">
+                <div className="stat-value" style={{ fontSize: '14px', color: new Date(expiresAt) < new Date() ? '#991b1b' : 'inherit' }}>
+                  {new Date(expiresAt).toLocaleString()}
+                </div>
+                <div className="stat-label">Expires At</div>
+              </div>
+            )}
+            {maxClicks != null && (
+              <div className="stat-card">
+                <div className="stat-value" style={{ fontSize: '14px' }}>
+                  {accessCount} / {maxClicks}
+                  {accessCount >= Number(maxClicks) && ' (reached)'}
+                </div>
+                <div className="stat-label">Max Clicks</div>
+              </div>
+            )}
           </div>
         </div>
       </div>

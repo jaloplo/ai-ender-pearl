@@ -122,7 +122,7 @@ export async function readUrls() {
       });
     }
 
-    // Return in the same shape as file-based: array of {id, original, created, stats, qrCode, private, title}
+    // Return in the same shape as file-based: array of {id, original, created, stats, qrCode, private, title, expiresAt, maxClicks}
     return docs.map((doc) => ({
       id: doc.id,
       original: doc.original,
@@ -131,6 +131,8 @@ export async function readUrls() {
       qrCode: doc.qrCode || null,
       private: !!doc.private,  // default to public (false) if absent
       title: doc.title || null,
+      expiresAt: doc.expiresAt || null,
+      maxClicks: doc.maxClicks != null ? Number(doc.maxClicks) : null,
     }));
   } catch (error) {
     console.error('Cosmos MongoDB readUrls error:', error);
@@ -149,7 +151,16 @@ export async function saveUrls(shorts) {
   for (const item of shorts) {
     await coll.updateOne(
       { id: item.id },
-      { $set: { id: item.id, original: item.original, created: item.created, qrCode: item.qrCode || null, private: !!item.private, title: item.title || null } },
+      { $set: { 
+        id: item.id, 
+        original: item.original, 
+        created: item.created, 
+        qrCode: item.qrCode || null, 
+        private: !!item.private, 
+        title: item.title || null,
+        expiresAt: item.expiresAt || null,
+        maxClicks: item.maxClicks != null ? Number(item.maxClicks) : null,
+      } },
       { upsert: true }
     );
   }
@@ -182,6 +193,8 @@ export async function findUrlByShort(short) {
       qrCode: doc.qrCode || null,
       private: !!doc.private,
       title: doc.title || null,
+      expiresAt: doc.expiresAt || null,
+      maxClicks: doc.maxClicks != null ? Number(doc.maxClicks) : null,
     };
   } catch (error) {
     console.error('Cosmos MongoDB findUrlByShort error:', error);
@@ -189,7 +202,7 @@ export async function findUrlByShort(short) {
   }
 }
 
-export async function addShortUrl(originalUrl, isPrivate = false, title = null, customSlug = null) {
+export async function addShortUrl(originalUrl, isPrivate = false, title = null, customSlug = null, expiresAt = null, maxClicks = null) {
   const coll = await getUrlsCollection();
   const shorts = await readUrls();
 
@@ -238,6 +251,8 @@ export async function addShortUrl(originalUrl, isPrivate = false, title = null, 
     qrCode,
     private: !!isPrivate,
     title: title || null,
+    expiresAt: expiresAt || null,
+    maxClicks: maxClicks != null ? Number(maxClicks) : null,
     // stats stored separately in 'stats' collection
   };
 
@@ -297,3 +312,19 @@ function generateShortCode() {
 
 // Export validator for potential client or other use
 export { isValidCustomSlug };
+
+// Helper to check if a URL entry has expired (by date or click count)
+// Exported for use in redirect and other places
+export function isUrlExpired(entry) {
+  if (!entry) return true;
+  const now = new Date();
+  if (entry.expiresAt) {
+    const expDate = new Date(entry.expiresAt);
+    if (now > expDate) return true;
+  }
+  const currentClicks = (entry.stats || []).length;
+  if (entry.maxClicks != null && currentClicks >= Number(entry.maxClicks)) {
+    return true;
+  }
+  return false;
+}

@@ -36,7 +36,13 @@ export async function POST(request) {
   }
 
   try {
-    const { url, private: isPrivate = false, customSlug = null } = await request.json();
+    const { 
+      url, 
+      private: isPrivate = false, 
+      customSlug = null,
+      expiresAt = null,
+      maxClicks = null 
+    } = await request.json();
     
     if (!url) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
@@ -49,11 +55,40 @@ export async function POST(request) {
     } catch (e) {
       return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
     }
+
+    // Validate expiration fields if provided
+    let normalizedExpiresAt = null;
+    if (expiresAt) {
+      const expDate = new Date(expiresAt);
+      if (isNaN(expDate.getTime())) {
+        return NextResponse.json({ error: 'Invalid expiration date format' }, { status: 400 });
+      }
+      if (expDate <= new Date()) {
+        return NextResponse.json({ error: 'Expiration date must be in the future' }, { status: 400 });
+      }
+      normalizedExpiresAt = expDate.toISOString();
+    }
+
+    let normalizedMaxClicks = null;
+    if (maxClicks != null && maxClicks !== '') {
+      const clicks = parseInt(maxClicks, 10);
+      if (isNaN(clicks) || clicks < 1) {
+        return NextResponse.json({ error: 'Max clicks must be a positive integer' }, { status: 400 });
+      }
+      normalizedMaxClicks = clicks;
+    }
     
     // Fetch title (non-blocking for UX, best effort)
     const title = await getPageTitle(validUrl.toString());
     
-    const entry = await addShortUrl(validUrl.toString(), !!isPrivate, title, customSlug || null);
+    const entry = await addShortUrl(
+      validUrl.toString(), 
+      !!isPrivate, 
+      title, 
+      customSlug || null,
+      normalizedExpiresAt,
+      normalizedMaxClicks
+    );
     
     const shortUrl = `${request.nextUrl.origin}/${entry.id}`;
     
@@ -65,6 +100,8 @@ export async function POST(request) {
       qrCode: entry.qrCode || null,
       private: !!entry.private,
       title: entry.title || null,
+      expiresAt: entry.expiresAt || null,
+      maxClicks: entry.maxClicks != null ? entry.maxClicks : null,
     });
   } catch (error) {
     console.error('Shorten error:', error);

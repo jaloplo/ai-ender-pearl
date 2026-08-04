@@ -6,6 +6,8 @@ export default function ShortenPage() {
   const [url, setUrl] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
   const [customSlug, setCustomSlug] = useState('');
+  const [expiresAt, setExpiresAt] = useState('');
+  const [maxClicks, setMaxClicks] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,6 +42,19 @@ export default function ShortenPage() {
         return;
       }
     }
+
+    // Client-side validation for expiration
+    if (expiresAt) {
+      const expDate = new Date(expiresAt);
+      if (isNaN(expDate.getTime()) || expDate <= new Date()) {
+        setError('Expiration date/time must be a valid future date and time.');
+        return;
+      }
+    }
+    if (maxClicks && (isNaN(parseInt(maxClicks, 10)) || parseInt(maxClicks, 10) < 1)) {
+      setError('Maximum clicks must be a positive integer.');
+      return;
+    }
     
     setLoading(true);
     
@@ -47,6 +62,12 @@ export default function ShortenPage() {
       const payload = { url: url.trim(), private: isPrivate };
       if (trimmedSlug) {
         payload.customSlug = trimmedSlug;
+      }
+      if (expiresAt) {
+        payload.expiresAt = expiresAt; // datetime-local format is ISO-like, server will normalize
+      }
+      if (maxClicks) {
+        payload.maxClicks = parseInt(maxClicks, 10);
       }
 
       const response = await fetch('/api/shorten', {
@@ -66,6 +87,8 @@ export default function ShortenPage() {
         setUrl('');
         setIsPrivate(false); // reset to default public
         setCustomSlug(''); // reset alias
+        setExpiresAt('');
+        setMaxClicks('');
         // Refresh stats after successful shorten
         fetchStats();
       }
@@ -142,6 +165,16 @@ export default function ShortenPage() {
     setIsPrivate(e.target.checked);
   };
 
+  // Helper to format expiration for display in result
+  const formatExpiration = (exp) => {
+    if (!exp) return null;
+    try {
+      return new Date(exp).toLocaleString();
+    } catch {
+      return exp;
+    }
+  };
+
   return (
     <div className="home-centered">
       <div className="home-split">
@@ -194,6 +227,48 @@ export default function ShortenPage() {
               </span>
             </div>
 
+            {/* Link Expiration controls - NEW FEATURE */}
+            <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f8f8f5', border: '1px solid var(--color-border-subtle)', borderRadius: '4px' }}>
+              <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>
+                Link Expiration (optional)
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div>
+                  <label htmlFor="expiresAt" style={{ fontSize: '13px', display: 'block', marginBottom: '2px' }}>
+                    Expires at (date &amp; time)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    id="expiresAt"
+                    value={expiresAt}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                    disabled={loading}
+                    style={{ width: '100%', padding: '8px 10px', fontSize: '14px', border: '1px solid var(--color-border-subtle)' }}
+                  />
+                  <span className="metadata" style={{ fontSize: '11px' }}>Link will stop working after this date/time.</span>
+                </div>
+                <div>
+                  <label htmlFor="maxClicks" style={{ fontSize: '13px', display: 'block', marginBottom: '2px' }}>
+                    Max total clicks
+                  </label>
+                  <input
+                    type="number"
+                    id="maxClicks"
+                    value={maxClicks}
+                    onChange={(e) => setMaxClicks(e.target.value)}
+                    min="1"
+                    placeholder="e.g. 100"
+                    disabled={loading}
+                    style={{ width: '140px', padding: '8px 10px', fontSize: '14px', border: '1px solid var(--color-border-subtle)' }}
+                  />
+                  <span className="metadata" style={{ fontSize: '11px', marginLeft: '8px' }}>After this many clicks, link deactivates.</span>
+                </div>
+              </div>
+              <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                You can set a date, a click limit, or both. Once reached, the link shows an expiration message instead of redirecting.
+              </span>
+            </div>
+
             {/* Privacy selection: checkbox, default unchecked = public. Background color changes when private */}
             <div 
               style={{ 
@@ -242,6 +317,12 @@ export default function ShortenPage() {
               {result.title && <><strong>Title:</strong> {result.title}<br /></>}
               <strong>Code:</strong> {result.id}<br />
               <strong>Visibility:</strong> {result.private ? 'Private' : 'Public'}<br />
+              {result.expiresAt && (
+                <><strong>Expires At:</strong> {formatExpiration(result.expiresAt)}<br /></>
+              )}
+              {result.maxClicks != null && (
+                <><strong>Max Clicks:</strong> {result.maxClicks}<br /></>
+              )}
               <span className="metadata">Created: {new Date(result.created).toLocaleString()}</span>
 
               {/* QR Code display - shown together with shortened URL. Larger size to showcase maximized logo. */}

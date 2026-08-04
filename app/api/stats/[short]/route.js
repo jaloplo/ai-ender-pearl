@@ -33,6 +33,8 @@ export async function GET(request, { params }) {
       qrCode: entry.qrCode || null,
       private: !!entry.private,
       title: entry.title || null,
+      expiresAt: entry.expiresAt || null,
+      maxClicks: entry.maxClicks != null ? entry.maxClicks : null,
     });
   } catch (error) {
     console.error('Stats error:', error);

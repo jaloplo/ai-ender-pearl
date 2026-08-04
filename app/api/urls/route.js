@@ -19,6 +19,8 @@ export async function GET(request) {
       accessCount: (item.stats || []).length,
       qrCode: item.qrCode || null,
       private: !!item.private,
+      expiresAt: item.expiresAt || null,
+      maxClicks: item.maxClicks != null ? item.maxClicks : null,
     }));
     
     return NextResponse.json({ items });

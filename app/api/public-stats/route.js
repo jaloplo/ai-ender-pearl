@@ -29,6 +29,8 @@ export async function GET(request) {
       shortUrl: `${origin}/${item.id}`,
       created: item.created,
       title: item.title || null,
+      expiresAt: item.expiresAt || null,
+      maxClicks: item.maxClicks != null ? item.maxClicks : null,
     }));
 
     // Compute unique domains from originals (public only)

@@ -19,13 +19,13 @@ export default function ListPage() {
   // Column visibility: all existing columns selectable
   const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState([
-    'shortCode', 'shortenedUrl', 'originalUrl', 'title', 'created', 'visibility', 'accesses', 'actions'
+    'shortCode', 'shortenedUrl', 'originalUrl', 'title', 'created', 'visibility', 'accesses', 'expires', 'maxClicks', 'actions'
   ]);
 
   const CACHE_KEY = 'urlShortenerCache';
   const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-  // All available columns (existing ones + title for completeness)
+  // All available columns (existing ones + title + new expiration fields)
   const allColumns = [
     { key: 'shortCode', label: 'Short Code' },
     { key: 'shortenedUrl', label: 'Shortened URL' },
@@ -34,6 +34,8 @@ export default function ListPage() {
     { key: 'created', label: 'Created' },
     { key: 'visibility', label: 'Visibility' },
     { key: 'accesses', label: 'Accesses' },
+    { key: 'expires', label: 'Expires At' },
+    { key: 'maxClicks', label: 'Max Clicks' },
     { key: 'actions', label: 'Actions' },
   ];
 
@@ -158,6 +160,14 @@ export default function ListPage() {
         case 'accesses':
           valA = a.accessCount ?? 0;
           valB = b.accessCount ?? 0;
+          break;
+        case 'expires':
+          valA = a.expiresAt ? new Date(a.expiresAt).getTime() : 0;
+          valB = b.expiresAt ? new Date(b.expiresAt).getTime() : 0;
+          break;
+        case 'maxClicks':
+          valA = a.maxClicks != null ? Number(a.maxClicks) : 0;
+          valB = b.maxClicks != null ? Number(b.maxClicks) : 0;
           break;
         default:
           return 0;
@@ -322,6 +332,29 @@ export default function ListPage() {
         );
       case 'accesses':
         return item.accessCount ?? 0;
+      case 'expires':
+        if (item.expiresAt) {
+          const isPast = new Date(item.expiresAt) < new Date();
+          return (
+            <span style={{ fontSize: '12px', color: isPast ? '#991b1b' : 'inherit' }}>
+              {new Date(item.expiresAt).toLocaleString()}
+              {isPast && ' (expired)'}
+            </span>
+          );
+        }
+        return <span className="metadata">(none)</span>;
+      case 'maxClicks':
+        if (item.maxClicks != null) {
+          const current = item.accessCount ?? 0;
+          const reached = current >= Number(item.maxClicks);
+          return (
+            <span style={{ fontSize: '12px', color: reached ? '#991b1b' : 'inherit' }}>
+              {current} / {item.maxClicks}
+              {reached && ' (reached)'}
+            </span>
+          );
+        }
+        return <span className="metadata">(none)</span>;
       case 'actions':
         return (
           <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -401,6 +434,7 @@ export default function ListPage() {
         Below is a list of all URLs that have been shortened. Data is persisted using Cosmos DB (MongoDB API) or local file system.
         Results are cached in your browser for faster loading. Click Stats to view detailed access logs (admin only).
         Private URLs are not shown in public stats or recent lists.
+        Expiration settings (date or click limit) are shown when configured; expired links will show a status message instead of redirecting.
       </p>
 
       {/* Search box for original URLs (and title) */}

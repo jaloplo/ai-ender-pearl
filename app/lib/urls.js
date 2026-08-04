@@ -27,13 +27,15 @@ async function readUrlsFile() {
     const data = await fs.readFile(DATA_FILE, 'utf-8');
     const parsed = JSON.parse(data);
     const shorts = parsed.shorts || [];
-    // Normalize to always include stats array, qrCode, private flag, and title for backward compat
+    // Normalize to always include stats array, qrCode, private flag, title, and expiration fields for backward compat
     return shorts.map(item => ({
       ...item,
       stats: item.stats || [],
       qrCode: item.qrCode || null,
       private: !!item.private,  // default to public (false) if absent
       title: item.title || null,
+      expiresAt: item.expiresAt || null,
+      maxClicks: item.maxClicks != null ? Number(item.maxClicks) : null,
     }));
   } catch (error) {
     // If file doesn't exist or invalid, return empty
@@ -60,7 +62,7 @@ async function findUrlByShortFile(short) {
   return shorts.find(item => item.id === short);
 }
 
-async function addShortUrlFile(originalUrl, isPrivate = false, title = null, customSlug = null) {
+async function addShortUrlFile(originalUrl, isPrivate = false, title = null, customSlug = null, expiresAt = null, maxClicks = null) {
   const shorts = await readUrlsFile();
   
   // Check if already exists
@@ -108,6 +110,8 @@ async function addShortUrlFile(originalUrl, isPrivate = false, title = null, cus
     qrCode,
     private: !!isPrivate,
     title: title || null,
+    expiresAt: expiresAt || null,
+    maxClicks: maxClicks != null ? Number(maxClicks) : null,
   };
   
   shorts.push(newEntry);
@@ -172,11 +176,11 @@ export async function findUrlByShort(short) {
   return findUrlByShortFile(short);
 }
 
-export async function addShortUrl(originalUrl, isPrivate = false, title = null, customSlug = null) {
+export async function addShortUrl(originalUrl, isPrivate = false, title = null, customSlug = null, expiresAt = null, maxClicks = null) {
   if (useCosmos) {
-    return cosmos.addShortUrl(originalUrl, isPrivate, title, customSlug);
+    return cosmos.addShortUrl(originalUrl, isPrivate, title, customSlug, expiresAt, maxClicks);
   }
-  return addShortUrlFile(originalUrl, isPrivate, title, customSlug);
+  return addShortUrlFile(originalUrl, isPrivate, title, customSlug, expiresAt, maxClicks);
 }
 
 export async function logAccess(short, accessInfo) {
@@ -195,3 +199,19 @@ export async function updateUrlVisibility(short, isPrivate) {
 
 // Export validator for potential client or other use
 export { isValidCustomSlug };
+
+// Helper to check if a URL entry has expired (by date or click count)
+// Exported for use in redirect and other places
+export function isUrlExpired(entry) {
+  if (!entry) return true;
+  const now = new Date();
+  if (entry.expiresAt) {
+    const expDate = new Date(entry.expiresAt);
+    if (now > expDate) return true;
+  }
+  const currentClicks = (entry.stats || []).length;
+  if (entry.maxClicks != null && currentClicks >= Number(entry.maxClicks)) {
+    return true;
+  }
+  return false;
+}
