@@ -36,7 +36,7 @@ export async function POST(request) {
   }
 
   try {
-    const { url, private: isPrivate = false } = await request.json();
+    const { url, private: isPrivate = false, customSlug = null } = await request.json();
     
     if (!url) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
@@ -53,7 +53,7 @@ export async function POST(request) {
     // Fetch title (non-blocking for UX, best effort)
     const title = await getPageTitle(validUrl.toString());
     
-    const entry = await addShortUrl(validUrl.toString(), !!isPrivate, title);
+    const entry = await addShortUrl(validUrl.toString(), !!isPrivate, title, customSlug || null);
     
     const shortUrl = `${request.nextUrl.origin}/${entry.id}`;
     
@@ -68,6 +68,10 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('Shorten error:', error);
+    // Surface specific alias errors to client
+    if (error.message && (error.message.includes('custom alias') || error.message.includes('already in use') || error.message.includes('Invalid custom'))) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json({ error: 'Failed to shorten URL' }, { status: 500 });
   }
 }

@@ -8,6 +8,19 @@ const useCosmos = !!process.env.COSMOS_MONGODB_URI;
 
 const DATA_FILE = path.join(process.cwd(), 'data', 'urls.json');
 
+// Slug validation helper (shared logic for custom alias)
+function isValidCustomSlug(slug) {
+  if (!slug || typeof slug !== 'string') return false;
+  const trimmed = slug.trim();
+  if (trimmed.length < 1 || trimmed.length > 64) return false;
+  // Allow letters, numbers, hyphens, underscores. No spaces or other special chars.
+  if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) return false;
+  // Reserved system paths (case-insensitive check)
+  const reserved = ['api', 'login', 'list', 'stats', 'shorten', '_next', 'favicon.ico', 'icon'];
+  if (reserved.includes(trimmed.toLowerCase())) return false;
+  return true;
+}
+
 // File-based implementations (original)
 async function readUrlsFile() {
   try {
@@ -47,7 +60,7 @@ async function findUrlByShortFile(short) {
   return shorts.find(item => item.id === short);
 }
 
-async function addShortUrlFile(originalUrl, isPrivate = false, title = null) {
+async function addShortUrlFile(originalUrl, isPrivate = false, title = null, customSlug = null) {
   const shorts = await readUrlsFile();
   
   // Check if already exists
@@ -63,14 +76,26 @@ async function addShortUrlFile(originalUrl, isPrivate = false, title = null) {
   }
   
   let shortCode;
-  let attempts = 0;
-  do {
-    shortCode = generateShortCode();
-    attempts++;
-    if (attempts > 10) {
-      throw new Error('Failed to generate unique short code');
+  if (customSlug) {
+    const trimmedSlug = customSlug.trim();
+    if (!isValidCustomSlug(trimmedSlug)) {
+      throw new Error('Invalid custom alias. Use 1-64 letters, numbers, hyphens or underscores only. Avoid reserved words.');
     }
-  } while (shorts.some(item => item.id === shortCode));
+    // Uniqueness check (exact match)
+    if (shorts.some(item => item.id === trimmedSlug)) {
+      throw new Error('This custom alias is already in use. Please choose a different one.');
+    }
+    shortCode = trimmedSlug;
+  } else {
+    let attempts = 0;
+    do {
+      shortCode = generateShortCode();
+      attempts++;
+      if (attempts > 10) {
+        throw new Error('Failed to generate unique short code');
+      }
+    } while (shorts.some(item => item.id === shortCode));
+  }
   
   const shortUrlForQr = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${shortCode}`;
   const qrCode = await generateQrCodeWithLogo(shortUrlForQr);
@@ -147,11 +172,11 @@ export async function findUrlByShort(short) {
   return findUrlByShortFile(short);
 }
 
-export async function addShortUrl(originalUrl, isPrivate = false, title = null) {
+export async function addShortUrl(originalUrl, isPrivate = false, title = null, customSlug = null) {
   if (useCosmos) {
-    return cosmos.addShortUrl(originalUrl, isPrivate, title);
+    return cosmos.addShortUrl(originalUrl, isPrivate, title, customSlug);
   }
-  return addShortUrlFile(originalUrl, isPrivate, title);
+  return addShortUrlFile(originalUrl, isPrivate, title, customSlug);
 }
 
 export async function logAccess(short, accessInfo) {
@@ -167,3 +192,6 @@ export async function updateUrlVisibility(short, isPrivate) {
   }
   return updateUrlVisibilityFile(short, isPrivate);
 }
+
+// Export validator for potential client or other use
+export { isValidCustomSlug };

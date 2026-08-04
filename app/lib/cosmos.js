@@ -86,6 +86,19 @@ async function getStatsCollection() {
   return statsCollection;
 }
 
+// Slug validation helper (shared logic for custom alias)
+function isValidCustomSlug(slug) {
+  if (!slug || typeof slug !== 'string') return false;
+  const trimmed = slug.trim();
+  if (trimmed.length < 1 || trimmed.length > 64) return false;
+  // Allow letters, numbers, hyphens, underscores. No spaces or other special chars.
+  if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) return false;
+  // Reserved system paths (case-insensitive check)
+  const reserved = ['api', 'login', 'list', 'stats', 'shorten', '_next', 'favicon.ico', 'icon'];
+  if (reserved.includes(trimmed.toLowerCase())) return false;
+  return true;
+}
+
 export async function readUrls() {
   try {
     const coll = await getUrlsCollection();
@@ -176,7 +189,7 @@ export async function findUrlByShort(short) {
   }
 }
 
-export async function addShortUrl(originalUrl, isPrivate = false, title = null) {
+export async function addShortUrl(originalUrl, isPrivate = false, title = null, customSlug = null) {
   const coll = await getUrlsCollection();
   const shorts = await readUrls();
 
@@ -192,16 +205,28 @@ export async function addShortUrl(originalUrl, isPrivate = false, title = null) 
     return existing;
   }
 
-  // Generate unique short code (reuse logic or import)
   let shortCode;
-  let attempts = 0;
-  do {
-    shortCode = generateShortCode();
-    attempts++;
-    if (attempts > 10) {
-      throw new Error('Failed to generate unique short code');
+  if (customSlug) {
+    const trimmedSlug = customSlug.trim();
+    if (!isValidCustomSlug(trimmedSlug)) {
+      throw new Error('Invalid custom alias. Use 1-64 letters, numbers, hyphens or underscores only. Avoid reserved words.');
     }
-  } while (shorts.some((item) => item.id === shortCode) || (await findUrlByShort(shortCode)));
+    // Uniqueness check (exact match)
+    if (shorts.some((item) => item.id === trimmedSlug) || (await findUrlByShort(trimmedSlug))) {
+      throw new Error('This custom alias is already in use. Please choose a different one.');
+    }
+    shortCode = trimmedSlug;
+  } else {
+    // Generate unique short code (reuse logic or import)
+    let attempts = 0;
+    do {
+      shortCode = generateShortCode();
+      attempts++;
+      if (attempts > 10) {
+        throw new Error('Failed to generate unique short code');
+      }
+    } while (shorts.some((item) => item.id === shortCode) || (await findUrlByShort(shortCode)));
+  }
 
   const shortUrlForQr = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${shortCode}`;
   const qrCode = await generateQrCodeWithLogo(shortUrlForQr);
@@ -269,3 +294,6 @@ function generateShortCode() {
   }
   return code;
 }
+
+// Export validator for potential client or other use
+export { isValidCustomSlug };

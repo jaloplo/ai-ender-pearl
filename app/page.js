@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 export default function ShortenPage() {
   const [url, setUrl] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
+  const [customSlug, setCustomSlug] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,16 +22,39 @@ export default function ShortenPage() {
       setError('Please enter a URL');
       return;
     }
+
+    // Optional client-side slug validation (server will enforce too)
+    const trimmedSlug = customSlug.trim();
+    if (trimmedSlug) {
+      if (trimmedSlug.length < 1 || trimmedSlug.length > 64) {
+        setError('Custom alias must be 1-64 characters.');
+        return;
+      }
+      if (!/^[a-zA-Z0-9_-]+$/.test(trimmedSlug)) {
+        setError('Custom alias can only contain letters, numbers, hyphens (-) and underscores (_).');
+        return;
+      }
+      const reserved = ['api', 'login', 'list', 'stats', 'shorten', '_next', 'favicon.ico', 'icon'];
+      if (reserved.includes(trimmedSlug.toLowerCase())) {
+        setError('This alias is reserved. Please choose another.');
+        return;
+      }
+    }
     
     setLoading(true);
     
     try {
+      const payload = { url: url.trim(), private: isPrivate };
+      if (trimmedSlug) {
+        payload.customSlug = trimmedSlug;
+      }
+
       const response = await fetch('/api/shorten', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: url.trim(), private: isPrivate }),
+        body: JSON.stringify(payload),
       });
       
       const data = await response.json();
@@ -41,6 +65,7 @@ export default function ShortenPage() {
         setResult(data);
         setUrl('');
         setIsPrivate(false); // reset to default public
+        setCustomSlug(''); // reset alias
         // Refresh stats after successful shorten
         fetchStats();
       }
@@ -148,6 +173,26 @@ export default function ShortenPage() {
               disabled={loading}
               className="prominent-input"
             />
+
+            {/* NEW: Custom Alias / Slug input (optional) */}
+            <div style={{ marginBottom: '16px' }}>
+              <label htmlFor="customSlug" style={{ fontSize: '14px', fontWeight: 500 }}>
+                Custom alias (optional)
+              </label>
+              <input
+                type="text"
+                id="customSlug"
+                value={customSlug}
+                onChange={(e) => setCustomSlug(e.target.value)}
+                placeholder="my-campaign-link or product2025"
+                disabled={loading}
+                className="prominent-input"
+                style={{ marginBottom: '4px', fontSize: '15px', padding: '10px 12px' }}
+              />
+              <span className="metadata" style={{ fontSize: '12px', display: 'block' }}>
+                Use letters, numbers, - or _ only. 1–64 chars. Replaces random code. Must be unique.
+              </span>
+            </div>
 
             {/* Privacy selection: checkbox, default unchecked = public. Background color changes when private */}
             <div 

@@ -177,3 +177,20 @@
   - Icons are inline SVGs (self-contained, flaticon-inspired clean line style) avoiding external assets.
   - New patterns: reusable header-sort logic and column-visibility dropdown for future tables.
   - Added reasoning.md + this ADR entry #21. Minor increase in client JS/CSS size.
+  
+## 22. Alias or Custom Slug Functionality
+* **Date:** 2024-11-03
+* **Context:** User request to implement "Alias or Custom Slug" feature: allow users to manually define the ending segment of a shortened URL (replacing the default random 6-char string) with a custom descriptive word/phrase. Goal: make links readable, memorable, intuitive for presentation, marketing campaigns, branding, and trust-building across digital/print channels.
+* **Decision:** 
+  - Added shared `isValidCustomSlug(slug)` validator in both `app/lib/urls.js` (file) and `app/lib/cosmos.js` (Mongo): 1-64 chars, `^[a-zA-Z0-9_-]+$` only, rejects reserved system paths (api/login/list/stats/etc.).
+  - Extended `addShortUrl(..., customSlug = null)` in both storage layers: if valid custom provided use it (after uniqueness check); else generate random. Throws descriptive errors for invalid/duplicate.
+  - Updated `app/api/shorten/route.js` to accept `customSlug` in body, forward to addShortUrl, and return specific 400 errors for alias issues.
+  - Enhanced `app/page.js`: new optional "Custom alias" input field (under URL, before privacy), client-side pre-validation, conditional payload, reset on success. Reuses existing prominent form styles + metadata hints.
+  - No changes to redirect (`app/[short]/route.js`), list, stats, public-stats, visibility, QR, title fetching, or auth. Custom slugs stored in same `id` field.
+* **Consequences:** 
+  - Users can now create highly readable custom short links (e.g. /product-launch) while random codes remain default.
+  - Improves UX for campaigns/branding without affecting existing data or flows.
+  - Centralized validation + clear error messages.
+  - 100% backward compatible; dual file/Cosmos parity maintained.
+  - New optional pattern for creation params established.
+  - Added reasoning.md + this ADR entry #22. All prior retro "Intranet from the Trenches" styling, split layout, stats, etc. preserved.
