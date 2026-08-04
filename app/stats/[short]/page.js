@@ -11,6 +11,10 @@ export default function StatsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Sorting for Access Log: column and direction
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('desc'); // default newest first for logs
+
   useEffect(() => {
     if (!short) {
       setError('No short code provided');
@@ -45,6 +49,22 @@ export default function StatsPage() {
     fetchStats();
   }, [short]);
 
+  // Handle column header click for sorting (alternating order)
+  const handleSort = (columnKey) => {
+    if (sortColumn === columnKey) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(columnKey);
+      // sensible defaults
+      setSortDirection(columnKey === 'timestamp' ? 'desc' : 'asc');
+    }
+  };
+
+  const getSortIndicator = (columnKey) => {
+    if (sortColumn !== columnKey) return '';
+    return sortDirection === 'asc' ? ' ▲' : ' ▼';
+  };
+
   if (loading) {
     return <p className="metadata">Loading stats...</p>;
   }
@@ -63,21 +83,89 @@ export default function StatsPage() {
     return <p>No data.</p>;
   }
 
-  const { id, original, created, accessCount, stats } = data;
+  const { id, original, created, accessCount, stats, title } = data;
 
+  // Display title or original URL in the header
+  const displayName = title || original;
+
+  // Sort the stats for the log table
+  let sortedStats = [...(stats || [])];
+  if (sortColumn) {
+    sortedStats.sort((a, b) => {
+      let valA, valB;
+
+      switch (sortColumn) {
+        case 'index':
+          // index is derived, use original order fallback
+          return 0;
+        case 'timestamp':
+          valA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+          valB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+          break;
+        case 'ip':
+          valA = a.ip || '';
+          valB = b.ip || '';
+          break;
+        case 'userAgent':
+          valA = a.userAgent || '';
+          valB = b.userAgent || '';
+          break;
+        case 'referer':
+          valA = a.referer || '';
+          valB = b.referer || '';
+          break;
+        default:
+          return 0;
+      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  // Use similar style to homepage stats: stat cards for properties
   return (
     <>
-      <h2>Access Statistics for {id}</h2>
+      <h2>Access Statistics for {displayName}</h2>
 
-      <div style={{ marginBottom: '16px' }}>
-        <strong>Access Count:</strong> {accessCount} {accessCount === 1 ? 'time' : 'times'}
-      </div>
-
-      <div style={{ marginBottom: '16px' }}>
-        <strong>Short Code:</strong> <code className="short-url">{id}</code><br />
-        <strong>Original URL:</strong>{' '}
-        <a href={original} target="_blank" rel="noopener noreferrer">{original}</a><br />
-        <strong>Created:</strong> {new Date(created).toLocaleString()}
+      {/* Properties shown in similar style to home page stats cards */}
+      <div className="stats-row stats-teaser" style={{ marginBottom: '24px' }}>
+        <div className="stats-content">
+          <strong>URL Details</strong>
+          <div className="stats-cards">
+            <div className="stat-card">
+              <div className="stat-value">{accessCount}</div>
+              <div className="stat-label">Access Count</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value" style={{ fontSize: '15px', wordBreak: 'break-all' }}>
+                <code className="short-url">{id}</code>
+              </div>
+              <div className="stat-label">Short Code</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value" style={{ fontSize: '13px', wordBreak: 'break-all' }}>
+                <a href={original} target="_blank" rel="noopener noreferrer">{original}</a>
+              </div>
+              <div className="stat-label">Original URL</div>
+            </div>
+            {title && (
+              <div className="stat-card">
+                <div className="stat-value" style={{ fontSize: '14px', wordBreak: 'break-word' }}>
+                  {title}
+                </div>
+                <div className="stat-label">Page Title</div>
+              </div>
+            )}
+            <div className="stat-card">
+              <div className="stat-value" style={{ fontSize: '14px' }}>
+                {new Date(created).toLocaleString()}
+              </div>
+              <div className="stat-label">Created</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <h3>Access Log</h3>
@@ -90,15 +178,45 @@ export default function StatsPage() {
         <table>
           <thead>
             <tr>
-              <th>#</th>
-              <th>Date &amp; Time</th>
-              <th>IP Address</th>
-              <th>Web Browser (User-Agent)</th>
-              <th>Referer</th>
+              <th 
+                onClick={() => handleSort('index')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort"
+              >
+                #{getSortIndicator('index')}
+              </th>
+              <th 
+                onClick={() => handleSort('timestamp')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort (alternates asc/desc)"
+              >
+                Date &amp; Time{getSortIndicator('timestamp')}
+              </th>
+              <th 
+                onClick={() => handleSort('ip')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort (alternates asc/desc)"
+              >
+                IP Address{getSortIndicator('ip')}
+              </th>
+              <th 
+                onClick={() => handleSort('userAgent')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort (alternates asc/desc)"
+              >
+                Web Browser (User-Agent){getSortIndicator('userAgent')}
+              </th>
+              <th 
+                onClick={() => handleSort('referer')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort (alternates asc/desc)"
+              >
+                Referer{getSortIndicator('referer')}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {stats.map((stat, index) => (
+            {sortedStats.map((stat, index) => (
               <tr key={index}>
                 <td>{index + 1}</td>
                 <td className="metadata">{new Date(stat.timestamp).toLocaleString()}</td>

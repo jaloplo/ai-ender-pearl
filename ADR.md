@@ -162,3 +162,18 @@
   - Fully backward compatible; new fields are optional.
   - Added reasoning.md and this ADR entry #20. Preserves retro "Intranet from the Trenches" styling and prior patterns (public-stats, split layout, etc.).
 
+## 21. List and Stats Page Enhancements (Sorting, Column Selector, Icon Actions, Styled Properties)
+* **Date:** 2024-11-02
+* **Context:** User request to enhance the protected list page (/list) and individual stats page (/stats/[short]): (1) allow ordering lists by clicking column headers with alternating sort order, (2) add a button to select which columns are shown (all existing columns available), (3) convert Actions column items to icon buttons using interface-style icons from flaticon.com for stats and privacy, (4) in stats page change the "Access Statistics for" slug to title or original URL, (5) style remaining properties like the homepage stats cards, (6) make Access Log sortable by headers with alternating order.
+* **Decision:** 
+  - Updated `app/list/page.js`: introduced client-side `sortColumn`/`sortDirection` state + `handleSort` (alternating on header click), dynamic `visibleColumns` state + "Select Columns" toggle panel with checkboxes for all columns (Short Code, Shortened URL, Original URL, Title, Created, Visibility, Accesses, Actions), rendered table cells conditionally. Replaced Actions text with compact SVG icon buttons (bar-chart for stats, lock/unlock for privacy) using new `.action-btn` CSS. Extended search to titles. Preserved all prior pagination/search/cache/visibility logic.
+  - Updated `app/stats/[short]/page.js`: header now uses `title || original` for display name. Replaced plain property divs with `.stats-row .stats-cards` grid (reusing homepage stat-card styles for Access Count, Short Code, Original URL, Title, Created). Added identical client-side sorting to Access Log table (headers clickable, alternating, indicators).
+  - Updated `app/api/stats/[short]/route.js` to return `title` field.
+  - Extended `app/globals.css` with sortable header hover styles and `.action-btn` retro-flat icon button rules.
+  - No backend or auth changes; all new behavior is client-side for consistency with prior list work.
+* **Consequences:** 
+  - Significantly improved usability on list (sortable + customizable columns + icon affordances) and stats (richer header + consistent visual language + sortable logs).
+  - Maintains 100% backward compatibility, retro "Intranet from the Trenches" styling, browser cache, auth, dual storage.
+  - Icons are inline SVGs (self-contained, flaticon-inspired clean line style) avoiding external assets.
+  - New patterns: reusable header-sort logic and column-visibility dropdown for future tables.
+  - Added reasoning.md + this ADR entry #21. Minor increase in client JS/CSS size.

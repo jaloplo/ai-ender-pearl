@@ -12,8 +12,30 @@ export default function ListPage() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
 
+  // Sorting state: column key and direction ('asc' | 'desc')
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  // Column visibility: all existing columns selectable
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState([
+    'shortCode', 'shortenedUrl', 'originalUrl', 'title', 'created', 'visibility', 'accesses', 'actions'
+  ]);
+
   const CACHE_KEY = 'urlShortenerCache';
   const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+  // All available columns (existing ones + title for completeness)
+  const allColumns = [
+    { key: 'shortCode', label: 'Short Code' },
+    { key: 'shortenedUrl', label: 'Shortened URL' },
+    { key: 'originalUrl', label: 'Original URL' },
+    { key: 'title', label: 'Title' },
+    { key: 'created', label: 'Created' },
+    { key: 'visibility', label: 'Visibility' },
+    { key: 'accesses', label: 'Accesses' },
+    { key: 'actions', label: 'Actions' },
+  ];
 
   const fetchUrls = async (forceRefresh = false) => {
     setLoading(true);
@@ -66,10 +88,87 @@ export default function ListPage() {
     fetchUrls();
   }, []);
 
+  // Handle column header click for sorting (alternating order)
+  const handleSort = (columnKey) => {
+    if (sortColumn === columnKey) {
+      // Toggle direction
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(columnKey);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1); // reset to first page on new sort
+  };
+
+  // Get sort indicator
+  const getSortIndicator = (columnKey) => {
+    if (sortColumn !== columnKey) return '';
+    return sortDirection === 'asc' ? ' ▲' : ' ▼';
+  };
+
+  // Toggle a column visibility
+  const toggleColumn = (key) => {
+    setVisibleColumns(prev => {
+      if (prev.includes(key)) {
+        // Prevent hiding all columns
+        if (prev.length === 1) return prev;
+        return prev.filter(k => k !== key);
+      } else {
+        return [...prev, key];
+      }
+    });
+  };
+
   // Clamp current page if it exceeds total after filter or data change
-  const filteredItems = items.filter(item =>
-    item.original.toLowerCase().includes(searchTerm.toLowerCase())
+  let filteredItems = items.filter(item =>
+    (item.original || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.title || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Apply sorting if active
+  if (sortColumn) {
+    filteredItems = [...filteredItems].sort((a, b) => {
+      let valA, valB;
+
+      switch (sortColumn) {
+        case 'shortCode':
+          valA = a.id || '';
+          valB = b.id || '';
+          break;
+        case 'shortenedUrl':
+          valA = a.shortUrl || '';
+          valB = b.shortUrl || '';
+          break;
+        case 'originalUrl':
+          valA = a.original || '';
+          valB = b.original || '';
+          break;
+        case 'title':
+          valA = a.title || '';
+          valB = b.title || '';
+          break;
+        case 'created':
+          valA = a.created ? new Date(a.created).getTime() : 0;
+          valB = b.created ? new Date(b.created).getTime() : 0;
+          break;
+        case 'visibility':
+          valA = a.private ? 1 : 0;
+          valB = b.private ? 1 : 0;
+          break;
+        case 'accesses':
+          valA = a.accessCount ?? 0;
+          valB = b.accessCount ?? 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
   const totalItems = filteredItems.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
@@ -157,11 +256,146 @@ export default function ListPage() {
     }
   };
 
+  // Simple inline SVG icons (interface style from flaticon-like: clean line icons)
+  const StatsIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 3v18h18" />
+      <path d="M18 17V9" />
+      <path d="M13 17V5" />
+      <path d="M8 17v-3" />
+    </svg>
+  );
+
+  const PrivacyIcon = ({ isPrivate }) => (
+    isPrivate ? (
+      // Lock icon (private)
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      </svg>
+    ) : (
+      // Unlock icon (public)
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+        <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+      </svg>
+    )
+  );
+
+  // Render cell content based on column
+  const renderCell = (item, columnKey) => {
+    switch (columnKey) {
+      case 'shortCode':
+        return <code className="short-url">{item.id}</code>;
+      case 'shortenedUrl':
+        return (
+          <a href={item.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">
+            {item.shortUrl}
+          </a>
+        );
+      case 'originalUrl':
+        return (
+          <a href={item.original} target="_blank" rel="noopener noreferrer" style={{ wordBreak: 'break-all' }}>
+            {item.original}
+          </a>
+        );
+      case 'title':
+        return item.title ? (
+          <span style={{ fontSize: '13px' }}>{item.title}</span>
+        ) : (
+          <span className="metadata">(no title)</span>
+        );
+      case 'created':
+        return <span className="metadata">{new Date(item.created).toLocaleString()}</span>;
+      case 'visibility':
+        return (
+          <span style={{
+            padding: '2px 6px',
+            borderRadius: '3px',
+            fontSize: '12px',
+            backgroundColor: item.private ? '#fee2e2' : '#dcfce7',
+            color: item.private ? '#991b1b' : '#166534',
+            border: `1px solid ${item.private ? '#fecaca' : '#bbf7d0'}`
+          }}>
+            {item.private ? 'Private' : 'Public'}
+          </span>
+        );
+      case 'accesses':
+        return item.accessCount ?? 0;
+      case 'actions':
+        return (
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <a 
+              href={`/stats/${item.id}`} 
+              className="action-btn" 
+              title="View Stats"
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '4px 6px' }}
+            >
+              <StatsIcon />
+            </a>
+            <button
+              onClick={() => handleToggleVisibility(item)}
+              disabled={updatingId === item.id || loading}
+              className="action-btn secondary"
+              title={item.private ? 'Make Public' : 'Make Private'}
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '4px 6px' }}
+            >
+              <PrivacyIcon isPrivate={item.private} />
+            </button>
+          </div>
+        );
+      default:
+        return '';
+    }
+  };
+
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <h2>All Shortened URLs</h2>
+        <button
+          onClick={() => setShowColumnSelector(!showColumnSelector)}
+          className="secondary"
+          style={{ padding: '4px 10px', fontSize: '13px' }}
+          aria-expanded={showColumnSelector}
+        >
+          Select Columns
+        </button>
       </div>
+
+      {/* Column selector dropdown */}
+      {showColumnSelector && (
+        <div 
+          style={{ 
+            border: '1px solid var(--color-border-subtle)', 
+            background: 'var(--color-bg-primary)', 
+            padding: '12px', 
+            marginBottom: '12px',
+            borderRadius: '4px',
+            maxWidth: '320px'
+          }}
+        >
+          <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>Choose columns to display:</div>
+          {allColumns.map(col => (
+            <label key={col.key} style={{ display: 'block', fontSize: '13px', marginBottom: '4px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={visibleColumns.includes(col.key)}
+                onChange={() => toggleColumn(col.key)}
+                style={{ marginRight: '6px' }}
+              />
+              {col.label}
+            </label>
+          ))}
+          <button 
+            onClick={() => setShowColumnSelector(false)} 
+            className="secondary" 
+            style={{ marginTop: '8px', fontSize: '12px', padding: '2px 8px' }}
+          >
+            Done
+          </button>
+        </div>
+      )}
 
       <p>
         Below is a list of all URLs that have been shortened. Data is persisted using Cosmos DB (MongoDB API) or local file system.
@@ -169,15 +403,15 @@ export default function ListPage() {
         Private URLs are not shown in public stats or recent lists.
       </p>
 
-      {/* Search box for original URLs */}
+      {/* Search box for original URLs (and title) */}
       <div style={{ marginBottom: '12px' }}>
         <input
           type="text"
-          placeholder="Search original URLs..."
+          placeholder="Search original URLs or titles..."
           value={searchTerm}
           onChange={handleSearchChange}
           style={{ width: '320px', maxWidth: '100%' }}
-          aria-label="Search original URLs"
+          aria-label="Search original URLs or titles"
         />
       </div>
 
@@ -246,56 +480,33 @@ export default function ListPage() {
           <table>
             <thead>
               <tr>
-                <th>Short Code</th>
-                <th>Shortened URL</th>
-                <th>Original URL</th>
-                <th>Created</th>
-                <th>Visibility</th>
-                <th>Accesses</th>
-                <th>Actions</th>
+                {allColumns
+                  .filter(col => visibleColumns.includes(col.key))
+                  .map(col => (
+                    <th 
+                      key={col.key}
+                      onClick={() => col.key !== 'actions' && handleSort(col.key)}
+                      style={{ 
+                        cursor: col.key !== 'actions' ? 'pointer' : 'default',
+                        userSelect: 'none'
+                      }}
+                      title={col.key !== 'actions' ? 'Click to sort (alternates asc/desc)' : ''}
+                    >
+                      {col.label}{getSortIndicator(col.key)}
+                    </th>
+                  ))}
               </tr>
             </thead>
             <tbody>
               {paginatedItems.map((item) => (
                 <tr key={item.id}>
-                  <td><code className="short-url">{item.id}</code></td>
-                  <td>
-                    <a href={item.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">
-                      {item.shortUrl}
-                    </a>
-                  </td>
-                  <td style={{ wordBreak: 'break-all' }}>
-                    <a href={item.original} target="_blank" rel="noopener noreferrer">
-                      {item.original}
-                    </a>
-                  </td>
-                  <td className="metadata">{new Date(item.created).toLocaleString()}</td>
-                  <td>
-                    <span style={{
-                      padding: '2px 6px',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      backgroundColor: item.private ? '#fee2e2' : '#dcfce7',
-                      color: item.private ? '#991b1b' : '#166534',
-                      border: `1px solid ${item.private ? '#fecaca' : '#bbf7d0'}`
-                    }}>
-                      {item.private ? 'Private' : 'Public'}
-                    </span>
-                  </td>
-                  <td>{item.accessCount ?? 0}</td>
-                  <td>
-                    <a href={`/stats/${item.id}`} className="btn-tertiary" style={{ padding: '2px 8px', fontSize: '12px' }}>
-                      View Stats
-                    </a>
-                    <button
-                      onClick={() => handleToggleVisibility(item)}
-                      disabled={updatingId === item.id || loading}
-                      className="secondary"
-                      style={{ padding: '2px 8px', fontSize: '12px', marginLeft: '4px' }}
-                    >
-                      {updatingId === item.id ? 'Saving...' : (item.private ? 'Make Public' : 'Make Private')}
-                    </button>
-                  </td>
+                  {allColumns
+                    .filter(col => visibleColumns.includes(col.key))
+                    .map(col => (
+                      <td key={col.key}>
+                        {renderCell(item, col.key)}
+                      </td>
+                    ))}
                 </tr>
               ))}
             </tbody>
