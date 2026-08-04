@@ -143,3 +143,22 @@
   - New pattern: PATCH update endpoint + per-item mutation buttons for list UIs.
   - Added reasoning.md and this ADR entry #19. All prior ADRs and retro "Intranet from the Trenches" styling preserved.
 
+## 20. Homepage Clicks Box, Private Checkbox Visual, Title Fetching, Recent Titles + Copy Buttons
+* **Date:** 2024-11-01
+* **Context:** User request to enhance homepage and shortening flow: (1) new box showing total clicks across all shortened URLs, (2) visual background color change on privacy checkbox when selected (private), (3) fetch and persist web page title when shortening a URL, (4) display title (if exists) for items in Recent Public Shortened URLs, (5) add Copy to clipboard button per recent shortened URL.
+* **Decision:** 
+  - Added `totalClicks` aggregation (sum of stats.length over public URLs) to GET /api/public-stats and exposed in homepage stats cards.
+  - Enhanced privacy checkbox wrapper in app/page.js with conditional red-tinted background (#fef2f2) + border when `isPrivate` true.
+  - Added server-side `getPageTitle` helper (fetch + regex title extraction, 5s timeout) in app/api/shorten/route.js; pass title to addShortUrl.
+  - Extended data layer (app/lib/urls.js + app/lib/cosmos.js) to store/return `title` field (null-safe).
+  - Updated public-stats to include `title` in recent items and totalClicks in response.
+  - Updated homepage recent list JSX to render title (if present) and per-item "Copy" button (clipboard API + fallback).
+  - Minor result display update to show title post-shorten.
+  - No changes to auth, list page, or other flows.
+* **Consequences:** 
+  - Homepage now surfaces aggregate clicks + visual private intent + richer recent list (titles + easy copy).
+  - Titles are best-effort (may be null for non-HTML or timeouts) and stored on creation.
+  - Public stats/recent continue to exclude private URLs.
+  - Fully backward compatible; new fields are optional.
+  - Added reasoning.md and this ADR entry #20. Preserves retro "Intranet from the Trenches" styling and prior patterns (public-stats, split layout, etc.).
+

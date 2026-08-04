@@ -14,12 +14,13 @@ async function readUrlsFile() {
     const data = await fs.readFile(DATA_FILE, 'utf-8');
     const parsed = JSON.parse(data);
     const shorts = parsed.shorts || [];
-    // Normalize to always include stats array, qrCode, and private flag for backward compat
+    // Normalize to always include stats array, qrCode, private flag, and title for backward compat
     return shorts.map(item => ({
       ...item,
       stats: item.stats || [],
       qrCode: item.qrCode || null,
       private: !!item.private,  // default to public (false) if absent
+      title: item.title || null,
     }));
   } catch (error) {
     // If file doesn't exist or invalid, return empty
@@ -46,7 +47,7 @@ async function findUrlByShortFile(short) {
   return shorts.find(item => item.id === short);
 }
 
-async function addShortUrlFile(originalUrl, isPrivate = false) {
+async function addShortUrlFile(originalUrl, isPrivate = false, title = null) {
   const shorts = await readUrlsFile();
   
   // Check if already exists
@@ -81,6 +82,7 @@ async function addShortUrlFile(originalUrl, isPrivate = false) {
     stats: [],
     qrCode,
     private: !!isPrivate,
+    title: title || null,
   };
   
   shorts.push(newEntry);
@@ -145,11 +147,11 @@ export async function findUrlByShort(short) {
   return findUrlByShortFile(short);
 }
 
-export async function addShortUrl(originalUrl, isPrivate = false) {
+export async function addShortUrl(originalUrl, isPrivate = false, title = null) {
   if (useCosmos) {
-    return cosmos.addShortUrl(originalUrl, isPrivate);
+    return cosmos.addShortUrl(originalUrl, isPrivate, title);
   }
-  return addShortUrlFile(originalUrl, isPrivate);
+  return addShortUrlFile(originalUrl, isPrivate, title);
 }
 
 export async function logAccess(short, accessInfo) {

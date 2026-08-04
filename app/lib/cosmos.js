@@ -109,7 +109,7 @@ export async function readUrls() {
       });
     }
 
-    // Return in the same shape as file-based: array of {id, original, created, stats, qrCode, private}
+    // Return in the same shape as file-based: array of {id, original, created, stats, qrCode, private, title}
     return docs.map((doc) => ({
       id: doc.id,
       original: doc.original,
@@ -117,6 +117,7 @@ export async function readUrls() {
       stats: statsByShort[doc.id] || [],
       qrCode: doc.qrCode || null,
       private: !!doc.private,  // default to public (false) if absent
+      title: doc.title || null,
     }));
   } catch (error) {
     console.error('Cosmos MongoDB readUrls error:', error);
@@ -135,7 +136,7 @@ export async function saveUrls(shorts) {
   for (const item of shorts) {
     await coll.updateOne(
       { id: item.id },
-      { $set: { id: item.id, original: item.original, created: item.created, qrCode: item.qrCode || null, private: !!item.private } },
+      { $set: { id: item.id, original: item.original, created: item.created, qrCode: item.qrCode || null, private: !!item.private, title: item.title || null } },
       { upsert: true }
     );
   }
@@ -167,6 +168,7 @@ export async function findUrlByShort(short) {
       stats,
       qrCode: doc.qrCode || null,
       private: !!doc.private,
+      title: doc.title || null,
     };
   } catch (error) {
     console.error('Cosmos MongoDB findUrlByShort error:', error);
@@ -174,7 +176,7 @@ export async function findUrlByShort(short) {
   }
 }
 
-export async function addShortUrl(originalUrl, isPrivate = false) {
+export async function addShortUrl(originalUrl, isPrivate = false, title = null) {
   const coll = await getUrlsCollection();
   const shorts = await readUrls();
 
@@ -210,6 +212,7 @@ export async function addShortUrl(originalUrl, isPrivate = false) {
     created: new Date().toISOString(),
     qrCode,
     private: !!isPrivate,
+    title: title || null,
     // stats stored separately in 'stats' collection
   };
 

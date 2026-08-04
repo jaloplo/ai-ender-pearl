@@ -28,6 +28,7 @@ export async function GET(request) {
       original: item.original,
       shortUrl: `${origin}/${item.id}`,
       created: item.created,
+      title: item.title || null,
     }));
 
     // Compute unique domains from originals (public only)
@@ -52,16 +53,22 @@ export async function GET(request) {
       return d >= monthStart;
     }).length;
 
+    // Total clicks (accesses) across all public shortened URLs
+    const totalClicks = shorts.reduce((sum, s) => {
+      return sum + ((s.stats && Array.isArray(s.stats)) ? s.stats.length : 0);
+    }, 0);
+
     return NextResponse.json({
       count,
       recent,
       uniqueDomains,
       thisMonth,
+      totalClicks,
     });
   } catch (error) {
     console.error('Public stats error:', error);
     return NextResponse.json(
-      { count: 0, recent: [], uniqueDomains: 0, thisMonth: 0 },
+      { count: 0, recent: [], uniqueDomains: 0, thisMonth: 0, totalClicks: 0 },
       { status: 200 }
     );
   }

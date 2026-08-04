@@ -9,7 +9,7 @@ export default function ShortenPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const [stats, setStats] = useState({ count: 0, recent: [], uniqueDomains: 0, thisMonth: 0 });
+  const [stats, setStats] = useState({ count: 0, recent: [], uniqueDomains: 0, thisMonth: 0, totalClicks: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
 
   const handleSubmit = async (e) => {
@@ -61,6 +61,7 @@ export default function ShortenPage() {
           recent: data.recent || [],
           uniqueDomains: data.uniqueDomains || 0,
           thisMonth: data.thisMonth || 0,
+          totalClicks: data.totalClicks || 0,
         });
       }
     } catch (e) {
@@ -84,6 +85,36 @@ export default function ShortenPage() {
     } catch {
       return iso;
     }
+  };
+
+  const copyToClipboard = async (text, e) => {
+    if (e) e.preventDefault();
+    try {
+      await navigator.clipboard.writeText(text);
+      // Optional: could add a temporary "Copied!" toast, but keep simple for now
+      const origText = e?.target?.textContent;
+      if (e && e.target) {
+        e.target.textContent = 'Copied!';
+        setTimeout(() => {
+          if (e.target) e.target.textContent = origText || 'Copy';
+        }, 1200);
+      }
+    } catch (err) {
+      // Fallback for older browsers
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      } catch (_) {}
+    }
+  };
+
+  // Handler for privacy checkbox to allow color change
+  const handlePrivateChange = (e) => {
+    setIsPrivate(e.target.checked);
   };
 
   return (
@@ -118,13 +149,22 @@ export default function ShortenPage() {
               className="prominent-input"
             />
 
-            {/* Privacy selection: checkbox, default unchecked = public */}
-            <div style={{ marginBottom: '16px' }}>
+            {/* Privacy selection: checkbox, default unchecked = public. Background color changes when private */}
+            <div 
+              style={{ 
+                marginBottom: '16px', 
+                backgroundColor: isPrivate ? '#fef2f2' : 'transparent',
+                padding: isPrivate ? '8px' : '0',
+                borderRadius: '4px',
+                border: isPrivate ? '1px solid #fecaca' : 'none',
+                transition: 'background-color 0.2s ease, border 0.2s ease'
+              }}
+            >
               <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={isPrivate}
-                  onChange={(e) => setIsPrivate(e.target.checked)}
+                  onChange={handlePrivateChange}
                   disabled={loading}
                   style={{ marginRight: '8px' }}
                 />
@@ -154,6 +194,7 @@ export default function ShortenPage() {
               </a>
               <br /><br />
               <strong>Original:</strong> {result.original}<br />
+              {result.title && <><strong>Title:</strong> {result.title}<br /></>}
               <strong>Code:</strong> {result.id}<br />
               <strong>Visibility:</strong> {result.private ? 'Private' : 'Public'}<br />
               <span className="metadata">Created: {new Date(result.created).toLocaleString()}</span>
@@ -185,7 +226,7 @@ export default function ShortenPage() {
         </div>
       </div>
 
-      {/* Feature: Anonymous Usage Stats Dashboard Teaser - visual cards below stats-row */}
+      {/* Feature: Anonymous Usage Stats Dashboard Teaser - visual cards below stats-row. Now includes Total Clicks box */}
       <div className="stats-row stats-teaser">
         <div className="stats-content">
           <strong>Community Stats (Public URLs only)</strong>
@@ -201,6 +242,10 @@ export default function ShortenPage() {
             <div className="stat-card">
               <div className="stat-value">{stats.thisMonth}</div>
               <div className="stat-label">Created This Month</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.totalClicks}</div>
+              <div className="stat-label">Total Clicks (All URLs)</div>
             </div>
           </div>
           {stats.count === 0 && (
@@ -219,14 +264,36 @@ export default function ShortenPage() {
             <div className="recent-list">
               {stats.recent.map((item, index) => (
                 <div key={index} className="recent-item">
-                  <a 
-                    href={item.shortUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="short-url"
-                  >
-                    {item.shortUrl}
-                  </a>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <a 
+                      href={item.shortUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="short-url"
+                    >
+                      {item.shortUrl}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={(e) => copyToClipboard(item.shortUrl, e)}
+                      className="secondary"
+                      style={{ 
+                        padding: '2px 8px', 
+                        fontSize: '11px', 
+                        marginLeft: '4px',
+                        minWidth: 'auto',
+                        lineHeight: '1.2'
+                      }}
+                      title="Copy shortened URL to clipboard"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  {item.title && (
+                    <div style={{ fontSize: '13px', fontWeight: 500, marginTop: '2px', color: 'var(--color-text-primary)' }}>
+                      {item.title}
+                    </div>
+                  )}
                   <span className="recent-meta">
                     {' → '}
                     <span className="original-link">{item.original}</span>

@@ -43,7 +43,7 @@ This tool is ideal for internal teams needing quick, auditable link management w
   - `POST /api/shorten`
   - `GET /api/urls`
   - `POST /api/auth/login`, `GET /api/auth/logout`
-  - `GET /api/redirect/[short]`
+  - `GET /[short]`: Dynamic redirect handler
 - **Data Layer** (`app/lib/urls.js`): Unified interface delegating to file or Cosmos storage. Includes duplicate detection, unique code generation, and access logging.
 - **Middleware** (`middleware.js`): Enforces auth on protected routes.
 
