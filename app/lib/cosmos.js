@@ -122,7 +122,7 @@ export async function readUrls() {
       });
     }
 
-    // Return in the same shape as file-based: array of {id, original, created, stats, qrCode, private, title, expiresAt, maxClicks}
+    // Return in the same shape as file-based: array of {id, original, created, stats, qrCode, private, title, expiresAt, maxClicks, decay}
     return docs.map((doc) => ({
       id: doc.id,
       original: doc.original,
@@ -133,6 +133,7 @@ export async function readUrls() {
       title: doc.title || null,
       expiresAt: doc.expiresAt || null,
       maxClicks: doc.maxClicks != null ? Number(doc.maxClicks) : null,
+      decay: !!doc.decay,
     }));
   } catch (error) {
     console.error('Cosmos MongoDB readUrls error:', error);
@@ -160,6 +161,7 @@ export async function saveUrls(shorts) {
         title: item.title || null,
         expiresAt: item.expiresAt || null,
         maxClicks: item.maxClicks != null ? Number(item.maxClicks) : null,
+        decay: !!item.decay,
       } },
       { upsert: true }
     );
@@ -195,6 +197,7 @@ export async function findUrlByShort(short) {
       title: doc.title || null,
       expiresAt: doc.expiresAt || null,
       maxClicks: doc.maxClicks != null ? Number(doc.maxClicks) : null,
+      decay: !!doc.decay,
     };
   } catch (error) {
     console.error('Cosmos MongoDB findUrlByShort error:', error);
@@ -202,7 +205,7 @@ export async function findUrlByShort(short) {
   }
 }
 
-export async function addShortUrl(originalUrl, isPrivate = false, title = null, customSlug = null, expiresAt = null, maxClicks = null) {
+export async function addShortUrl(originalUrl, isPrivate = false, title = null, customSlug = null, expiresAt = null, maxClicks = null, isDecay = false) {
   const coll = await getUrlsCollection();
   const shorts = await readUrls();
 
@@ -219,7 +222,7 @@ export async function addShortUrl(originalUrl, isPrivate = false, title = null, 
   }
 
   let shortCode;
-  if (customSlug) {
+  if (customSlug && !isDecay) {
     const trimmedSlug = customSlug.trim();
     if (!isValidCustomSlug(trimmedSlug)) {
       throw new Error('Invalid custom alias. Use 1-64 letters, numbers, hyphens or underscores only. Avoid reserved words.');
@@ -244,15 +247,21 @@ export async function addShortUrl(originalUrl, isPrivate = false, title = null, 
   const shortUrlForQr = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${shortCode}`;
   const qrCode = await generateQrCodeWithLogo(shortUrlForQr);
 
+  // For decay links: always private, ignore custom/exp/max
+  const effectivePrivate = isDecay ? true : !!isPrivate;
+  const effectiveExpires = isDecay ? null : expiresAt;
+  const effectiveMax = isDecay ? null : maxClicks;
+
   const newEntry = {
     id: shortCode,
     original: originalUrl,
     created: new Date().toISOString(),
     qrCode,
-    private: !!isPrivate,
+    private: effectivePrivate,
     title: title || null,
-    expiresAt: expiresAt || null,
-    maxClicks: maxClicks != null ? Number(maxClicks) : null,
+    expiresAt: effectiveExpires || null,
+    maxClicks: effectiveMax != null ? Number(effectiveMax) : null,
+    decay: !!isDecay,
     // stats stored separately in 'stats' collection
   };
 
@@ -298,6 +307,21 @@ export async function updateUrlVisibility(short, isPrivate) {
   } catch (error) {
     console.error('Cosmos MongoDB updateUrlVisibility error:', error);
     return null;
+  }
+}
+
+export async function deleteShortUrl(short) {
+  try {
+    const coll = await getUrlsCollection();
+    const statsColl = await getStatsCollection();
+    // Delete URL doc
+    const res = await coll.deleteOne({ id: short });
+    // Also clean up its stats (best effort)
+    await statsColl.deleteMany({ short });
+    return res.deletedCount > 0;
+  } catch (error) {
+    console.error('Cosmos MongoDB deleteShortUrl error:', error);
+    return false;
   }
 }
 

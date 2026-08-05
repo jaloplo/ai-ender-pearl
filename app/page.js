@@ -18,6 +18,11 @@ export default function ShortenPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
+  // NEW: Decay Link (Burn After Reading) mode
+  const [mode, setMode] = useState('standard'); // 'standard' | 'decay'
+
+  const isDecayMode = mode === 'decay';
+
   const checkAuthStatus = async () => {
     try {
       const res = await fetch('/api/auth/status');
@@ -40,9 +45,9 @@ export default function ShortenPage() {
       return;
     }
 
-    // Optional client-side slug validation (server will enforce too) - only relevant if authenticated
+    // Optional client-side slug validation (server will enforce too) - only relevant if authenticated AND not decay
     const trimmedSlug = customSlug.trim();
-    if (isAuthenticated && trimmedSlug) {
+    if (isAuthenticated && trimmedSlug && !isDecayMode) {
       if (trimmedSlug.length < 1 || trimmedSlug.length > 64) {
         setError('Custom alias must be 1-64 characters.');
         return;
@@ -58,15 +63,15 @@ export default function ShortenPage() {
       }
     }
 
-    // Client-side validation for expiration - only if authenticated
-    if (isAuthenticated && expiresAt) {
+    // Client-side validation for expiration - only if authenticated AND not decay
+    if (isAuthenticated && expiresAt && !isDecayMode) {
       const expDate = new Date(expiresAt);
       if (isNaN(expDate.getTime()) || expDate <= new Date()) {
         setError('Expiration date/time must be a valid future date and time.');
         return;
       }
     }
-    if (isAuthenticated && maxClicks && (isNaN(parseInt(maxClicks, 10)) || parseInt(maxClicks, 10) < 1)) {
+    if (isAuthenticated && maxClicks && !isDecayMode && (isNaN(parseInt(maxClicks, 10)) || parseInt(maxClicks, 10) < 1)) {
       setError('Maximum clicks must be a positive integer.');
       return;
     }
@@ -75,13 +80,18 @@ export default function ShortenPage() {
     
     try {
       const payload = { url: url.trim() };
-      if (isAuthenticated) {
+
+      if (isDecayMode) {
+        // Decay mode: always private, no custom/exp, pass decay flag
+        payload.decay = true;
+        // Do not send private/custom/exp for decay (backend enforces)
+      } else if (isAuthenticated) {
         payload.private = isPrivate;
         if (trimmedSlug) {
           payload.customSlug = trimmedSlug;
         }
         if (expiresAt) {
-          payload.expiresAt = expiresAt; // datetime-local format is ISO-like, server will normalize
+          payload.expiresAt = expiresAt;
         }
         if (maxClicks) {
           payload.maxClicks = parseInt(maxClicks, 10);
@@ -103,8 +113,8 @@ export default function ShortenPage() {
       } else {
         setResult(data);
         setUrl('');
-        setIsPrivate(false); // reset to default public
-        setCustomSlug(''); // reset alias
+        setIsPrivate(false);
+        setCustomSlug('');
         setExpiresAt('');
         setMaxClicks('');
         // Refresh stats after successful shorten
@@ -158,7 +168,6 @@ export default function ShortenPage() {
     if (e) e.preventDefault();
     try {
       await navigator.clipboard.writeText(text);
-      // Optional: could add a temporary "Copied!" toast, but keep simple for now
       const origText = e?.target?.textContent;
       if (e && e.target) {
         e.target.textContent = 'Copied!';
@@ -167,7 +176,6 @@ export default function ShortenPage() {
         }, 1200);
       }
     } catch (err) {
-      // Fallback for older browsers
       try {
         const textArea = document.createElement('textarea');
         textArea.value = text;
@@ -194,6 +202,20 @@ export default function ShortenPage() {
     }
   };
 
+  // Switch mode and reset non-applicable fields
+  const switchMode = (newMode) => {
+    setMode(newMode);
+    setError('');
+    // When switching to decay, clear advanced fields (they are hidden)
+    if (newMode === 'decay') {
+      setIsPrivate(false);
+      setCustomSlug('');
+      setExpiresAt('');
+      setMaxClicks('');
+      setAdvancedOpen(false); // collapse advanced when in decay
+    }
+  };
+
   return (
     <div className="home-centered">
       <div className="home-split">
@@ -214,134 +236,164 @@ export default function ShortenPage() {
 
         {/* Right side: Textbox, button, and shortening result */}
         <div className="right-panel">
-          <form onSubmit={handleSubmit} className="prominent-form">
-            <label htmlFor="url">Original URL</label>
+          {/* Tabbed selector for Standard vs Decay Link (Burn After Reading) */}
+          <div className="mode-tabs">
+            <button
+              type="button"
+              className={`mode-tab ${mode === 'standard' ? 'active' : ''}`}
+              onClick={() => switchMode('standard')}
+              disabled={loading}
+            >
+              🔗 Standard Link
+            </button>
+            <button
+              type="button"
+              className={`mode-tab decay-tab ${mode === 'decay' ? 'active' : ''}`}
+              onClick={() => switchMode('decay')}
+              disabled={loading}
+            >
+              🔥 Decay Link (Burn After Reading)
+            </button>
+          </div>
+
+          <form 
+            onSubmit={handleSubmit} 
+            className={`prominent-form ${isDecayMode ? 'decay-form' : ''}`}
+          >
+            {/* Contextual notice banner for Decay mode */}
+            {isDecayMode && (
+              <div className="decay-banner">
+                🛡️ <strong>Self-Destruct Mode:</strong> This link will be permanently erased from the server immediately after the first click.
+              </div>
+            )}
+
+            <label htmlFor="url">{isDecayMode ? 'Paste confidential URL here...' : 'Original URL'}</label>
             <input
               type="text"
               id="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com/very/long/path/to/your/resource"
+              placeholder={isDecayMode ? "https://example.com/confidential-document" : "https://example.com/very/long/path/to/your/resource"}
               disabled={loading}
               className="prominent-input"
             />
 
-            {/* Collapsible Advanced Options box grouping: Make private, Custom Alias and Link Expiration.
-                The box header is always visible. Content expands/collapses on click.
-                Options shown for all but greyed/disabled for anonymous (features never sent for anon). */}
-            <div className="advanced-box">
-              <div 
-                className="advanced-header"
-                onClick={() => setAdvancedOpen(!advancedOpen)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setAdvancedOpen(!advancedOpen);
-                  }
-                }}
-                aria-expanded={advancedOpen}
-              >
-                <span>Advanced Options {!isAuthenticated && ' (login required)'}</span>
-                <span className="toggle-icon">{advancedOpen ? '−' : '+'}</span>
-              </div>
-              {advancedOpen && (
-                <div className="advanced-options">
-                  {/* Custom Alias / Slug input */}
-                  <div className={`option ${!isAuthenticated ? 'greyed' : ''}`}>
-                    <label htmlFor="customSlug">Custom Alias (optional)</label>
-                    <input
-                      type="text"
-                      id="customSlug"
-                      value={customSlug}
-                      onChange={(e) => setCustomSlug(e.target.value)}
-                      placeholder="my-campaign-link or product2025"
-                      disabled={loading || !isAuthenticated}
-                      className="option-input"
-                    />
-                    <span className="metadata" style={{ fontSize: '11px', display: 'block' }}>
-                      Use letters, numbers, - or _ only.
-                    </span>
-                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
-                      1-64 chars. Replaces random code. Must be unique.
-                    </span>
-                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
-                      Replaces random code.
-                    </span>
-                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
-                      Must be unique.
-                    </span>
-                  </div>
-
-                  {/* Link Expiration controls */}
-                  <div className={`option ${!isAuthenticated ? 'greyed' : ''}`}>
-                    <label>Link Expiration (optional)</label>
-                    <div className="expiration-fields">
-                      <div className="exp-field">
-                        <label htmlFor="expiresAt" className="sub-label">
-                          Expires at (date &amp; time)
-                        </label>
-                        <input
-                          type="datetime-local"
-                          id="expiresAt"
-                          value={expiresAt}
-                          onChange={(e) => setExpiresAt(e.target.value)}
-                          disabled={loading || !isAuthenticated}
-                          className="option-input"
-                        />
-                        <span className="metadata" style={{ fontSize: '11px' }}>Link will stop working after this date/time.</span>
-                      </div>
-                      <div className="exp-field">
-                        <label htmlFor="maxClicks" className="sub-label">
-                          Max total clicks
-                        </label>
-                        <input
-                          type="number"
-                          id="maxClicks"
-                          value={maxClicks}
-                          onChange={(e) => setMaxClicks(e.target.value)}
-                          min="1"
-                          placeholder="e.g. 100"
-                          disabled={loading || !isAuthenticated}
-                          className="option-input"
-                        />
-                        <span className="metadata" style={{ fontSize: '11px' }}>After this many clicks, link deactivates.</span>
-                      </div>
-                    </div>
-                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
-                      You can set a date, a click limit, or both. Once reached, the link shows an expiration message instead of redirecting.
-                    </span>
-                  </div>
-
-                  {/* Privacy selection: checkbox, default unchecked = public. Background color changes when private (only for auth users) */}
-                  <div 
-                    className={`option privacy-option ${!isAuthenticated ? 'greyed' : ''} ${isPrivate && isAuthenticated ? 'private-active' : ''}`}
-                  >
-                    <label>Privacy (optional)</label>
-                    <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', cursor: isAuthenticated ? 'pointer' : 'default' }}>
-                      <input
-                        type="checkbox"
-                        checked={isPrivate}
-                        onChange={handlePrivateChange}
-                        disabled={loading || !isAuthenticated}
-                        style={{ marginRight: '8px' }}
-                      />
-                      Make it private
-                    </label>
-                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
-                      Public is the default value.
-                    </span>
-                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
-                      The link will not show in public stats or recent lists.
-                    </span>
-                  </div>
+            {/* Advanced options are completely hidden in Decay mode (per spec: streamlined form) */}
+            {!isDecayMode && (
+              <div className="advanced-box">
+                <div 
+                  className="advanced-header"
+                  onClick={() => setAdvancedOpen(!advancedOpen)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setAdvancedOpen(!advancedOpen);
+                    }
+                  }}
+                  aria-expanded={advancedOpen}
+                >
+                  <span>Advanced Options {!isAuthenticated && ' (login required)'}</span>
+                  <span className="toggle-icon">{advancedOpen ? '−' : '+'}</span>
                 </div>
-              )}
-            </div>
+                {advancedOpen && (
+                  <div className="advanced-options">
+                    {/* Custom Alias / Slug input */}
+                    <div className={`option ${!isAuthenticated ? 'greyed' : ''}`}>
+                      <label htmlFor="customSlug">Custom Alias (optional)</label>
+                      <input
+                        type="text"
+                        id="customSlug"
+                        value={customSlug}
+                        onChange={(e) => setCustomSlug(e.target.value)}
+                        placeholder="my-campaign-link or product2025"
+                        disabled={loading || !isAuthenticated}
+                        className="option-input"
+                      />
+                      <span className="metadata" style={{ fontSize: '11px', display: 'block' }}>
+                        Use letters, numbers, - or _ only.
+                      </span>
+                      <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                        1-64 chars. Replaces random code. Must be unique.
+                      </span>
+                    </div>
 
-            <button type="submit" disabled={loading} className="prominent-button">
-              {loading ? 'Shortening...' : 'Shorten URL'}
+                    {/* Link Expiration controls */}
+                    <div className={`option ${!isAuthenticated ? 'greyed' : ''}`}>
+                      <label>Link Expiration (optional)</label>
+                      <div className="expiration-fields">
+                        <div className="exp-field">
+                          <label htmlFor="expiresAt" className="sub-label">
+                            Expires at (date &amp; time)
+                          </label>
+                          <input
+                            type="datetime-local"
+                            id="expiresAt"
+                            value={expiresAt}
+                            onChange={(e) => setExpiresAt(e.target.value)}
+                            disabled={loading || !isAuthenticated}
+                            className="option-input"
+                          />
+                          <span className="metadata" style={{ fontSize: '11px' }}>Link will stop working after this date/time.</span>
+                        </div>
+                        <div className="exp-field">
+                          <label htmlFor="maxClicks" className="sub-label">
+                            Max total clicks
+                          </label>
+                          <input
+                            type="number"
+                            id="maxClicks"
+                            value={maxClicks}
+                            onChange={(e) => setMaxClicks(e.target.value)}
+                            min="1"
+                            placeholder="e.g. 100"
+                            disabled={loading || !isAuthenticated}
+                            className="option-input"
+                          />
+                          <span className="metadata" style={{ fontSize: '11px' }}>After this many clicks, link deactivates.</span>
+                        </div>
+                      </div>
+                      <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                        You can set a date, a click limit, or both. Once reached, the link shows an expiration message instead of redirecting.
+                      </span>
+                    </div>
+
+                    {/* Privacy selection */}
+                    <div 
+                      className={`option privacy-option ${!isAuthenticated ? 'greyed' : ''} ${isPrivate && isAuthenticated ? 'private-active' : ''}`}
+                    >
+                      <label>Privacy (optional)</label>
+                      <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', cursor: isAuthenticated ? 'pointer' : 'default' }}>
+                        <input
+                          type="checkbox"
+                          checked={isPrivate}
+                          onChange={handlePrivateChange}
+                          disabled={loading || !isAuthenticated}
+                          style={{ marginRight: '8px' }}
+                        />
+                        Make it private
+                      </label>
+                      <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                        Public is the default value.
+                      </span>
+                      <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                        The link will not show in public stats or recent lists.
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className={`prominent-button ${isDecayMode ? 'decay-button' : ''}`}
+            >
+              {loading 
+                ? (isDecayMode ? 'Creating Self-Destructing Link...' : 'Shortening...') 
+                : (isDecayMode ? 'Create Self-Destructing Link' : 'Shorten URL')}
             </button>
           </form>
 
@@ -352,7 +404,7 @@ export default function ShortenPage() {
           )}
 
           {result && (
-            <div className="result">
+            <div className={`result ${result.decay ? 'decay-result' : ''}`}>
               <strong>Shortened URL</strong><br />
               <a href={result.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">
                 {result.shortUrl}
@@ -362,6 +414,9 @@ export default function ShortenPage() {
               {result.title && <><strong>Title:</strong> {result.title}<br /></>}
               <strong>Code:</strong> {result.id}<br />
               <strong>Visibility:</strong> {result.private ? 'Private' : 'Public'}<br />
+              {result.decay && (
+                <><strong>Type:</strong> <span style={{ color: '#b91c1c', fontWeight: 600 }}>Decay (Burn After Reading)</span><br /></>
+              )}
               {result.expiresAt && (
                 <><strong>Expires At:</strong> {formatExpiration(result.expiresAt)}<br /></>
               )}
@@ -370,7 +425,14 @@ export default function ShortenPage() {
               )}
               <span className="metadata">Created: {new Date(result.created).toLocaleString()}</span>
 
-              {/* QR Code display - shown together with shortened URL. Larger size to showcase maximized logo. */}
+              {/* Decay-specific warning note */}
+              {result.decay && (
+                <div className="decay-warning">
+                  ⚠️ Link ready! Remember, it will self-destruct as soon as the recipient opens it.
+                </div>
+              )}
+
+              {/* QR Code display */}
               {result.qrCode && (
                 <div style={{ marginTop: '16px' }}>
                   <strong>QR Code</strong>
@@ -397,7 +459,7 @@ export default function ShortenPage() {
         </div>
       </div>
 
-      {/* Feature: Anonymous Usage Stats Dashboard Teaser - visual cards below stats-row. Now includes Total Clicks box */}
+      {/* Feature: Anonymous Usage Stats Dashboard Teaser */}
       <div className="stats-row stats-teaser">
         <div className="stats-content">
           <strong>Community Stats (Public URLs only)</strong>
@@ -425,7 +487,7 @@ export default function ShortenPage() {
         </div>
       </div>
 
-      {/* Feature: Recent Public Shortened URLs - new section below stats-row using existing CSS classes for consistency */}
+      {/* Recent Public Shortened URLs */}
       <div className="stats-row recent-section">
         <div className="stats-content">
           <strong>Recent Public Shortened URLs</strong>

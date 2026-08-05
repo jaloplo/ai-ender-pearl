@@ -225,3 +225,23 @@
   - Accessibility improved with ARIA and keyboard handling for the toggle.
   - Minor increase in client state and CSS; purely presentational/UX change.
   - reasoning.md created documenting the steps. Aligns with ADR #23 and all previous homepage evolution patterns.
+## 25. Decay Link (Burn After Reading) Feature
+* **Date:** 2024-11-06
+* **Context:** User request to implement "Decay Link" specialized mode per detailed Functional & UX Specification: single-use self-destructing short URLs that are automatically deleted from the database after first access. Must be private by default, never appear in public stats/recent lists, provide a custom "destroyed" status page (not generic 404), protect against crawler/preview bots via User-Agent, and deliver a tabbed UI on the homepage with visual warm/reddish feedback, info banner, streamlined form (hiding non-applicable options), and special button/result states.
+* **Decision:** 
+  - Extended data model with `decay: boolean` flag (forced private, no custom/exp for decay links) in app/lib/urls.js + app/lib/cosmos.js. Added `deleteShortUrl()` helper.
+  - Updated creation: app/api/shorten/route.js accepts and forwards `decay`.
+  - Core burn logic in app/[short]/route.js: crawler UA filter list, early safe redirect for bots on decay, log-then-delete on first human access, render dedicated 🔥 "Confidential Link Destroyed" page (410) for subsequent or burned accesses. Preserved all expiration logic.
+  - Homepage (app/page.js): introduced `mode` state + tab selector (Standard vs Decay), conditional rendering of banner/form/button/result, decay-specific payload, visual classes.
+  - Styling: appended decay-specific CSS in app/globals.css (tabs, warm tones, banner, button, warning note).
+  - Admin surfaces: app/list/page.js now shows "Type" column (🔥 Decay badge), updated docs.
+  - Ensured decay links are excluded from public-stats/recent (via private flag) and never leak.
+  - All changes maintain dual storage parity, auth boundaries, QR, titles, existing expiration, and retro "Intranet from the Trenches" design.
+* **Consequences:** 
+  - Delivers complete privacy-focused single-use link capability matching the spec exactly.
+  - Strong bot protection prevents accidental burns from link previews.
+  - Clean UX with immediate visual mode distinction and reduced cognitive load in decay mode.
+  - Decay links appear in admin list (for management) but are auto-removed after use.
+  - 100% backward compatible; no impact on standard shortening flows or prior features (ADRs 1-24).
+  - New pattern: creation-time "mode" flags with specialized redirect handling (reusable for future ephemeral link types).
+  - Added reasoning.md + this ADR entry. Project memory updated.

@@ -21,6 +21,7 @@ export async function GET(request) {
       private: !!item.private,
       expiresAt: item.expiresAt || null,
       maxClicks: item.maxClicks != null ? item.maxClicks : null,
+      decay: !!item.decay,
     }));
     
     return NextResponse.json({ items });

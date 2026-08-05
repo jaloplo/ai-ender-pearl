@@ -41,7 +41,8 @@ export async function POST(request) {
       private: isPrivate = false, 
       customSlug = null,
       expiresAt = null,
-      maxClicks = null 
+      maxClicks = null,
+      decay = false   // new decay / burn-after-reading flag
     } = await request.json();
     
     if (!url) {
@@ -56,9 +57,9 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
     }
 
-    // Validate expiration fields if provided
+    // Validate expiration fields if provided (skip for decay)
     let normalizedExpiresAt = null;
-    if (expiresAt) {
+    if (!decay && expiresAt) {
       const expDate = new Date(expiresAt);
       if (isNaN(expDate.getTime())) {
         return NextResponse.json({ error: 'Invalid expiration date format' }, { status: 400 });
@@ -70,7 +71,7 @@ export async function POST(request) {
     }
 
     let normalizedMaxClicks = null;
-    if (maxClicks != null && maxClicks !== '') {
+    if (!decay && maxClicks != null && maxClicks !== '') {
       const clicks = parseInt(maxClicks, 10);
       if (isNaN(clicks) || clicks < 1) {
         return NextResponse.json({ error: 'Max clicks must be a positive integer' }, { status: 400 });
@@ -87,7 +88,8 @@ export async function POST(request) {
       title, 
       customSlug || null,
       normalizedExpiresAt,
-      normalizedMaxClicks
+      normalizedMaxClicks,
+      !!decay   // pass decay flag
     );
     
     const shortUrl = `${request.nextUrl.origin}/${entry.id}`;
@@ -102,6 +104,7 @@ export async function POST(request) {
       title: entry.title || null,
       expiresAt: entry.expiresAt || null,
       maxClicks: entry.maxClicks != null ? entry.maxClicks : null,
+      decay: !!entry.decay,
     });
   } catch (error) {
     console.error('Shorten error:', error);

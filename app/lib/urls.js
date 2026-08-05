@@ -27,7 +27,7 @@ async function readUrlsFile() {
     const data = await fs.readFile(DATA_FILE, 'utf-8');
     const parsed = JSON.parse(data);
     const shorts = parsed.shorts || [];
-    // Normalize to always include stats array, qrCode, private flag, title, and expiration fields for backward compat
+    // Normalize to always include stats array, qrCode, private flag, title, expiration fields, and decay for backward compat
     return shorts.map(item => ({
       ...item,
       stats: item.stats || [],
@@ -36,6 +36,7 @@ async function readUrlsFile() {
       title: item.title || null,
       expiresAt: item.expiresAt || null,
       maxClicks: item.maxClicks != null ? Number(item.maxClicks) : null,
+      decay: !!item.decay,  // decay / burn-after-reading flag (default false)
     }));
   } catch (error) {
     // If file doesn't exist or invalid, return empty
@@ -62,7 +63,7 @@ async function findUrlByShortFile(short) {
   return shorts.find(item => item.id === short);
 }
 
-async function addShortUrlFile(originalUrl, isPrivate = false, title = null, customSlug = null, expiresAt = null, maxClicks = null) {
+async function addShortUrlFile(originalUrl, isPrivate = false, title = null, customSlug = null, expiresAt = null, maxClicks = null, isDecay = false) {
   const shorts = await readUrlsFile();
   
   // Check if already exists
@@ -78,7 +79,7 @@ async function addShortUrlFile(originalUrl, isPrivate = false, title = null, cus
   }
   
   let shortCode;
-  if (customSlug) {
+  if (customSlug && !isDecay) {
     const trimmedSlug = customSlug.trim();
     if (!isValidCustomSlug(trimmedSlug)) {
       throw new Error('Invalid custom alias. Use 1-64 letters, numbers, hyphens or underscores only. Avoid reserved words.');
@@ -102,16 +103,22 @@ async function addShortUrlFile(originalUrl, isPrivate = false, title = null, cus
   const shortUrlForQr = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${shortCode}`;
   const qrCode = await generateQrCodeWithLogo(shortUrlForQr);
 
+  // For decay links: always private, ignore custom/exp/max
+  const effectivePrivate = isDecay ? true : !!isPrivate;
+  const effectiveExpires = isDecay ? null : expiresAt;
+  const effectiveMax = isDecay ? null : maxClicks;
+
   const newEntry = {
     id: shortCode,
     original: originalUrl,
     created: new Date().toISOString(),
     stats: [],
     qrCode,
-    private: !!isPrivate,
+    private: effectivePrivate,
     title: title || null,
-    expiresAt: expiresAt || null,
-    maxClicks: maxClicks != null ? Number(maxClicks) : null,
+    expiresAt: effectiveExpires || null,
+    maxClicks: effectiveMax != null ? Number(effectiveMax) : null,
+    decay: !!isDecay,
   };
   
   shorts.push(newEntry);
@@ -150,6 +157,16 @@ async function updateUrlVisibilityFile(short, isPrivate) {
   return shorts[idx];
 }
 
+async function deleteShortUrlFile(short) {
+  const shorts = await readUrlsFile();
+  const filtered = shorts.filter(item => item.id !== short);
+  if (filtered.length === shorts.length) {
+    return false; // not found
+  }
+  await saveUrlsFile(filtered);
+  return true;
+}
+
 // Public API - delegates to Cosmos (MongoDB API) or file storage
 export async function readUrls() {
   if (useCosmos) {
@@ -176,11 +193,11 @@ export async function findUrlByShort(short) {
   return findUrlByShortFile(short);
 }
 
-export async function addShortUrl(originalUrl, isPrivate = false, title = null, customSlug = null, expiresAt = null, maxClicks = null) {
+export async function addShortUrl(originalUrl, isPrivate = false, title = null, customSlug = null, expiresAt = null, maxClicks = null, isDecay = false) {
   if (useCosmos) {
-    return cosmos.addShortUrl(originalUrl, isPrivate, title, customSlug, expiresAt, maxClicks);
+    return cosmos.addShortUrl(originalUrl, isPrivate, title, customSlug, expiresAt, maxClicks, isDecay);
   }
-  return addShortUrlFile(originalUrl, isPrivate, title, customSlug, expiresAt, maxClicks);
+  return addShortUrlFile(originalUrl, isPrivate, title, customSlug, expiresAt, maxClicks, isDecay);
 }
 
 export async function logAccess(short, accessInfo) {
@@ -195,6 +212,13 @@ export async function updateUrlVisibility(short, isPrivate) {
     return cosmos.updateUrlVisibility(short, isPrivate);
   }
   return updateUrlVisibilityFile(short, isPrivate);
+}
+
+export async function deleteShortUrl(short) {
+  if (useCosmos) {
+    return cosmos.deleteShortUrl(short);
+  }
+  return deleteShortUrlFile(short);
 }
 
 // Export validator for potential client or other use

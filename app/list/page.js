@@ -19,13 +19,13 @@ export default function ListPage() {
   // Column visibility: all existing columns selectable
   const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState([
-    'shortCode', 'shortenedUrl', 'originalUrl', 'title', 'created', 'visibility', 'accesses', 'expires', 'maxClicks', 'actions'
+    'shortCode', 'shortenedUrl', 'originalUrl', 'title', 'created', 'visibility', 'accesses', 'expires', 'maxClicks', 'decay', 'actions'
   ]);
 
   const CACHE_KEY = 'urlShortenerCache';
   const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-  // All available columns (existing ones + title + new expiration fields)
+  // All available columns (existing ones + title + new expiration fields + decay)
   const allColumns = [
     { key: 'shortCode', label: 'Short Code' },
     { key: 'shortenedUrl', label: 'Shortened URL' },
@@ -36,6 +36,7 @@ export default function ListPage() {
     { key: 'accesses', label: 'Accesses' },
     { key: 'expires', label: 'Expires At' },
     { key: 'maxClicks', label: 'Max Clicks' },
+    { key: 'decay', label: 'Type' },
     { key: 'actions', label: 'Actions' },
   ];
 
@@ -168,6 +169,10 @@ export default function ListPage() {
         case 'maxClicks':
           valA = a.maxClicks != null ? Number(a.maxClicks) : 0;
           valB = b.maxClicks != null ? Number(b.maxClicks) : 0;
+          break;
+        case 'decay':
+          valA = a.decay ? 1 : 0;
+          valB = b.decay ? 1 : 0;
           break;
         default:
           return 0;
@@ -355,6 +360,21 @@ export default function ListPage() {
           );
         }
         return <span className="metadata">(none)</span>;
+      case 'decay':
+        return item.decay ? (
+          <span style={{
+            padding: '2px 6px',
+            borderRadius: '3px',
+            fontSize: '12px',
+            backgroundColor: '#fef2f2',
+            color: '#991b1b',
+            border: '1px solid #fecaca'
+          }}>
+            🔥 Decay
+          </span>
+        ) : (
+          <span className="metadata">Standard</span>
+        );
       case 'actions':
         return (
           <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -435,6 +455,7 @@ export default function ListPage() {
         Results are cached in your browser for faster loading. Click Stats to view detailed access logs (admin only).
         Private URLs are not shown in public stats or recent lists.
         Expiration settings (date or click limit) are shown when configured; expired links will show a status message instead of redirecting.
+        Decay (single-use) links are automatically removed after first access and are always private.
       </p>
 
       {/* Search box for original URLs (and title) */}
