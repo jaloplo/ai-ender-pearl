@@ -333,7 +333,7 @@ export default function ShortenPage() {
                       Public is the default value.
                     </span>
                     <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
-                      The link won't show in public stats or recent lists.
+                      The link will not show in public stats or recent lists.
                     </span>
                   </div>
                 </div>
