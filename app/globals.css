@@ -1259,3 +1259,185 @@ th[style*="cursor: pointer"]:hover {
   max-width: 320px;
   font-size: 13px;
 }
+/* ========================================
+   ADVANCED OPTIONS UNIFICATION (Make private, Custom Alias, Link Expiration)
+   - Only available for logged-in users (greyed for anonymous)
+   - Unified retro style for the three options
+   - Original URL field style preserved (prominent-input)
+   ======================================== */
+
+.advanced-options {
+  margin-bottom: 16px;
+}
+
+.option {
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: #f8f8f5;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 4px;
+}
+
+.option:last-child {
+  margin-bottom: 0;
+}
+
+.option label {
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.option .sub-label {
+  font-size: 13px;
+  display: block;
+  margin-bottom: 2px;
+  color: var(--color-text-secondary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.option-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid var(--color-border-subtle);
+  background-color: var(--color-bg-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  border-radius: 3px;
+  box-sizing: border-box;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.option-input:focus {
+  outline: none;
+  border-color: var(--color-brand-accent);
+  box-shadow: 0 0 0 1px var(--color-brand-accent);
+}
+
+.option.greyed {
+  opacity: 0.55;
+}
+
+.option.greyed .option-input,
+.option.greyed input {
+  background-color: #f0f0f0;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.option.greyed label {
+  color: #888;
+}
+
+.expiration-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exp-field {
+  /* container for each sub field */
+}
+
+.privacy-option {
+  /* inherits base .option styles */
+}
+
+.private-active {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  transition: background-color 0.2s ease, border 0.2s ease;
+}
+
+/* Responsive tweaks for options */
+@media (max-width: 768px) {
+  .option {
+    padding: 10px;
+  }
+  .option-input {
+    font-size: 13px;
+    padding: 7px 9px;
+  }
+}
+
+/* ========================================
+   ADVANCED OPTIONS COLLAPSIBLE BOX
+   Groups "Make private", "Custom Alias" and "Link Expiration"
+   into a single collapsible "Advanced Options" section.
+   Header always visible; content toggles open/closed.
+   Reuses existing .advanced-options / .option styles inside.
+   ======================================== */
+
+.advanced-box {
+  margin-bottom: 16px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 4px;
+  background-color: var(--color-bg-secondary);
+  overflow: hidden;
+}
+
+.advanced-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background-color: #f0f0e8; /* subtle retro beige tint */
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.1s ease;
+}
+
+.advanced-header:hover {
+  background-color: #e8e4d9;
+}
+
+.advanced-header:focus {
+  outline: 2px solid var(--color-brand-accent);
+  outline-offset: -2px;
+}
+
+.advanced-header .toggle-icon {
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 700;
+  width: 20px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.advanced-box .advanced-options {
+  padding: 12px 14px;
+  margin: 0;
+  border: none;
+  background: transparent;
+}
+
+/* Ensure inner options keep their previous styling when inside the box */
+.advanced-box .option {
+  margin-bottom: 12px;
+  background-color: #f8f8f5;
+  border: 1px solid var(--color-border-subtle);
+}
+
+.advanced-box .option:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .advanced-header {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .advanced-box .advanced-options {
+    padding: 10px 12px;
+  }
+}

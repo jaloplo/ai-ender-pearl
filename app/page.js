@@ -15,6 +15,21 @@ export default function ShortenPage() {
   const [stats, setStats] = useState({ count: 0, recent: [], uniqueDomains: 0, thisMonth: 0, totalClicks: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  const checkAuthStatus = async () => {
+    try {
+      const res = await fetch('/api/auth/status');
+      if (res.ok) {
+        const data = await res.json();
+        setIsAuthenticated(data.authenticated === true);
+      }
+    } catch (e) {
+      setIsAuthenticated(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -25,9 +40,9 @@ export default function ShortenPage() {
       return;
     }
 
-    // Optional client-side slug validation (server will enforce too)
+    // Optional client-side slug validation (server will enforce too) - only relevant if authenticated
     const trimmedSlug = customSlug.trim();
-    if (trimmedSlug) {
+    if (isAuthenticated && trimmedSlug) {
       if (trimmedSlug.length < 1 || trimmedSlug.length > 64) {
         setError('Custom alias must be 1-64 characters.');
         return;
@@ -43,15 +58,15 @@ export default function ShortenPage() {
       }
     }
 
-    // Client-side validation for expiration
-    if (expiresAt) {
+    // Client-side validation for expiration - only if authenticated
+    if (isAuthenticated && expiresAt) {
       const expDate = new Date(expiresAt);
       if (isNaN(expDate.getTime()) || expDate <= new Date()) {
         setError('Expiration date/time must be a valid future date and time.');
         return;
       }
     }
-    if (maxClicks && (isNaN(parseInt(maxClicks, 10)) || parseInt(maxClicks, 10) < 1)) {
+    if (isAuthenticated && maxClicks && (isNaN(parseInt(maxClicks, 10)) || parseInt(maxClicks, 10) < 1)) {
       setError('Maximum clicks must be a positive integer.');
       return;
     }
@@ -59,15 +74,18 @@ export default function ShortenPage() {
     setLoading(true);
     
     try {
-      const payload = { url: url.trim(), private: isPrivate };
-      if (trimmedSlug) {
-        payload.customSlug = trimmedSlug;
-      }
-      if (expiresAt) {
-        payload.expiresAt = expiresAt; // datetime-local format is ISO-like, server will normalize
-      }
-      if (maxClicks) {
-        payload.maxClicks = parseInt(maxClicks, 10);
+      const payload = { url: url.trim() };
+      if (isAuthenticated) {
+        payload.private = isPrivate;
+        if (trimmedSlug) {
+          payload.customSlug = trimmedSlug;
+        }
+        if (expiresAt) {
+          payload.expiresAt = expiresAt; // datetime-local format is ISO-like, server will normalize
+        }
+        if (maxClicks) {
+          payload.maxClicks = parseInt(maxClicks, 10);
+        }
       }
 
       const response = await fetch('/api/shorten', {
@@ -124,6 +142,7 @@ export default function ShortenPage() {
       setStatsLoading(false);
     };
     loadStats();
+    checkAuthStatus();
   }, []);
 
   const formatTimestamp = (iso) => {
@@ -207,92 +226,118 @@ export default function ShortenPage() {
               className="prominent-input"
             />
 
-            {/* NEW: Custom Alias / Slug input (optional) */}
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="customSlug" style={{ fontSize: '14px', fontWeight: 500 }}>
-                Custom alias (optional)
-              </label>
-              <input
-                type="text"
-                id="customSlug"
-                value={customSlug}
-                onChange={(e) => setCustomSlug(e.target.value)}
-                placeholder="my-campaign-link or product2025"
-                disabled={loading}
-                className="prominent-input"
-                style={{ marginBottom: '4px', fontSize: '15px', padding: '10px 12px' }}
-              />
-              <span className="metadata" style={{ fontSize: '12px', display: 'block' }}>
-                Use letters, numbers, - or _ only. 1–64 chars. Replaces random code. Must be unique.
-              </span>
-            </div>
-
-            {/* Link Expiration controls - NEW FEATURE */}
-            <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f8f8f5', border: '1px solid var(--color-border-subtle)', borderRadius: '4px' }}>
-              <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>
-                Link Expiration (optional)
-              </label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div>
-                  <label htmlFor="expiresAt" style={{ fontSize: '13px', display: 'block', marginBottom: '2px' }}>
-                    Expires at (date &amp; time)
-                  </label>
-                  <input
-                    type="datetime-local"
-                    id="expiresAt"
-                    value={expiresAt}
-                    onChange={(e) => setExpiresAt(e.target.value)}
-                    disabled={loading}
-                    style={{ width: '100%', padding: '8px 10px', fontSize: '14px', border: '1px solid var(--color-border-subtle)' }}
-                  />
-                  <span className="metadata" style={{ fontSize: '11px' }}>Link will stop working after this date/time.</span>
-                </div>
-                <div>
-                  <label htmlFor="maxClicks" style={{ fontSize: '13px', display: 'block', marginBottom: '2px' }}>
-                    Max total clicks
-                  </label>
-                  <input
-                    type="number"
-                    id="maxClicks"
-                    value={maxClicks}
-                    onChange={(e) => setMaxClicks(e.target.value)}
-                    min="1"
-                    placeholder="e.g. 100"
-                    disabled={loading}
-                    style={{ width: '140px', padding: '8px 10px', fontSize: '14px', border: '1px solid var(--color-border-subtle)' }}
-                  />
-                  <span className="metadata" style={{ fontSize: '11px', marginLeft: '8px' }}>After this many clicks, link deactivates.</span>
-                </div>
+            {/* Collapsible Advanced Options box grouping: Make private, Custom Alias and Link Expiration.
+                The box header is always visible. Content expands/collapses on click.
+                Options shown for all but greyed/disabled for anonymous (features never sent for anon). */}
+            <div className="advanced-box">
+              <div 
+                className="advanced-header"
+                onClick={() => setAdvancedOpen(!advancedOpen)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setAdvancedOpen(!advancedOpen);
+                  }
+                }}
+                aria-expanded={advancedOpen}
+              >
+                <span>Advanced Options {!isAuthenticated && ' (login required)'}</span>
+                <span className="toggle-icon">{advancedOpen ? '−' : '+'}</span>
               </div>
-              <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
-                You can set a date, a click limit, or both. Once reached, the link shows an expiration message instead of redirecting.
-              </span>
-            </div>
+              {advancedOpen && (
+                <div className="advanced-options">
+                  {/* Custom Alias / Slug input */}
+                  <div className={`option ${!isAuthenticated ? 'greyed' : ''}`}>
+                    <label htmlFor="customSlug">Custom Alias (optional)</label>
+                    <input
+                      type="text"
+                      id="customSlug"
+                      value={customSlug}
+                      onChange={(e) => setCustomSlug(e.target.value)}
+                      placeholder="my-campaign-link or product2025"
+                      disabled={loading || !isAuthenticated}
+                      className="option-input"
+                    />
+                    <span className="metadata" style={{ fontSize: '11px', display: 'block' }}>
+                      Use letters, numbers, - or _ only.
+                    </span>
+                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                      1-64 chars. Replaces random code. Must be unique.
+                    </span>
+                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                      Replaces random code.
+                    </span>
+                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                      Must be unique.
+                    </span>
+                  </div>
 
-            {/* Privacy selection: checkbox, default unchecked = public. Background color changes when private */}
-            <div 
-              style={{ 
-                marginBottom: '16px', 
-                backgroundColor: isPrivate ? '#fef2f2' : 'transparent',
-                padding: isPrivate ? '8px' : '0',
-                borderRadius: '4px',
-                border: isPrivate ? '1px solid #fecaca' : 'none',
-                transition: 'background-color 0.2s ease, border 0.2s ease'
-              }}
-            >
-              <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={isPrivate}
-                  onChange={handlePrivateChange}
-                  disabled={loading}
-                  style={{ marginRight: '8px' }}
-                />
-                Make private (not shown in public stats or recent lists)
-              </label>
-              <span className="metadata" style={{ fontSize: '12px', marginLeft: '24px', display: 'block' }}>
-                Default: public
-              </span>
+                  {/* Link Expiration controls */}
+                  <div className={`option ${!isAuthenticated ? 'greyed' : ''}`}>
+                    <label>Link Expiration (optional)</label>
+                    <div className="expiration-fields">
+                      <div className="exp-field">
+                        <label htmlFor="expiresAt" className="sub-label">
+                          Expires at (date &amp; time)
+                        </label>
+                        <input
+                          type="datetime-local"
+                          id="expiresAt"
+                          value={expiresAt}
+                          onChange={(e) => setExpiresAt(e.target.value)}
+                          disabled={loading || !isAuthenticated}
+                          className="option-input"
+                        />
+                        <span className="metadata" style={{ fontSize: '11px' }}>Link will stop working after this date/time.</span>
+                      </div>
+                      <div className="exp-field">
+                        <label htmlFor="maxClicks" className="sub-label">
+                          Max total clicks
+                        </label>
+                        <input
+                          type="number"
+                          id="maxClicks"
+                          value={maxClicks}
+                          onChange={(e) => setMaxClicks(e.target.value)}
+                          min="1"
+                          placeholder="e.g. 100"
+                          disabled={loading || !isAuthenticated}
+                          className="option-input"
+                        />
+                        <span className="metadata" style={{ fontSize: '11px' }}>After this many clicks, link deactivates.</span>
+                      </div>
+                    </div>
+                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                      You can set a date, a click limit, or both. Once reached, the link shows an expiration message instead of redirecting.
+                    </span>
+                  </div>
+
+                  {/* Privacy selection: checkbox, default unchecked = public. Background color changes when private (only for auth users) */}
+                  <div 
+                    className={`option privacy-option ${!isAuthenticated ? 'greyed' : ''} ${isPrivate && isAuthenticated ? 'private-active' : ''}`}
+                  >
+                    <label>Privacy (optional)</label>
+                    <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', cursor: isAuthenticated ? 'pointer' : 'default' }}>
+                      <input
+                        type="checkbox"
+                        checked={isPrivate}
+                        onChange={handlePrivateChange}
+                        disabled={loading || !isAuthenticated}
+                        style={{ marginRight: '8px' }}
+                      />
+                      Make it private
+                    </label>
+                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                      Public is the default value.
+                    </span>
+                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                      The link won't show in public stats or recent lists.
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <button type="submit" disabled={loading} className="prominent-button">

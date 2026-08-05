@@ -194,3 +194,34 @@
   - 100% backward compatible; dual file/Cosmos parity maintained.
   - New optional pattern for creation params established.
   - Added reasoning.md + this ADR entry #22. All prior retro "Intranet from the Trenches" styling, split layout, stats, etc. preserved.
+## 23. Login-Gated Advanced Options + Unified Styling on Homepage
+* **Date:** 2024-11-04
+* **Context:** User request: "Make private", "Custom Alias" and "Link Expiration" options are only available for users that have been login. So, show all three options but greyed out for anonymous users. For anonymous users, make sure that none of these three features are sent when shortening a URL. Keep the style and design for the "Original URL" field. Unify the style and design of the "Make private", "Custom Alias" and "Link Expiration" options.
+* **Decision:** 
+  - Created new public endpoint `app/api/auth/status/route.js` (GET) that returns `{ authenticated: boolean }` based on the httpOnly 'auth' cookie (lightweight status probe, no middleware protection).
+  - Updated `app/page.js`: added `isAuthenticated` state + fetch on mount; guarded all client validation and payload construction (`private`, `customSlug`, `expiresAt`, `maxClicks`) behind `if (isAuthenticated)` so anonymous users never send the fields; disabled the three option inputs with `!isAuthenticated`; restructured the options into a new `.advanced-options` wrapper with per-option `.option` + conditional `.greyed` classes; appended "(login required)" hints for anon; preserved exact `.prominent-input` for Original URL and all prior homepage logic (split layout, stats, recent, QR, title, etc.).
+  - Extended `app/globals.css` with unified retro styles: `.advanced-options`, `.option` (shared beige card treatment), `.option-input`, `.greyed` (opacity + disabled visuals), `.expiration-fields`, `.private-active` (reuses prior red tint). Original URL styles untouched.
+  - No changes to backend shorten logic, lib/urls.js, cosmos.js, layout, middleware, or other pages (they already default the fields safely).
+* **Consequences:** 
+  - Anonymous users see the three options (visible affordance) but cannot interact or activate the features; payload is strictly limited to basic URL only.
+  - Logged-in users retain full functionality with no visual or behavioral change.
+  - Styles now unified across the three advanced options while "Original URL" remains prominent and distinct.
+  - Maintains 100% backward compatibility, auth boundaries, retro "Intranet from the Trenches" design, and all prior features (public stats, QR, expiration enforcement for auth users, etc.).
+  - Added lightweight public auth status pattern for future client-side gating needs.
+  - Files impacted: app/page.js, app/globals.css, app/api/auth/status/route.js (new), reasoning.md, ADR.md #23.
+  - Positive: clearer UX distinction, consistent design language, security by omission for anon.
+  
+## 24. Homepage Advanced Options Collapsible Box
+* **Date:** 2024-11-05
+* **Context:** User request to group the "Make private", "Custom Alias" and "Link Expiration" options (previously unified in ADR #23) into an "Advanced Options" box or similar that the user can collapse or expand on the home page. Goal: reduce visual clutter on the primary shorten form while keeping the three features discoverable and grouped.
+* **Decision:** 
+  - In `app/page.js`: Introduced `advancedOpen` React state (default closed). Wrapped the existing advanced options markup inside a new `.advanced-box` container. Added a clickable `.advanced-header` (with "Advanced Options" label + +/- toggle icon) that toggles visibility of the inner content via `onClick` + keyboard support (`Enter`/`Space`) and `aria-expanded`. The inner options block is conditionally rendered only when open. All prior logic (auth gating via `isAuthenticated`, disabled inputs for anon, payload filtering, validation, private visual tint, resets) preserved exactly. "Original URL" field remains outside the box.
+  - In `app/globals.css`: Appended new rules for `.advanced-box`, `.advanced-header` (retro beige header with hover/focus), `.toggle-icon`, and integration overrides so existing `.option` cards render cleanly inside the collapsible without double borders.
+  - No changes to backend, lib files, auth, stats, result display, or any other functionality.
+* **Consequences:** 
+  - Homepage form is now cleaner by default (advanced features hidden until user expands the box).
+  - Users can still access all three options with a single click; grouping is explicit.
+  - Maintains 100% backward compatibility, login-gating behavior, retro "Intranet from the Trenches"/Substack styling, and all prior homepage features (split layout, public stats, recent URLs, QR, etc.).
+  - Accessibility improved with ARIA and keyboard handling for the toggle.
+  - Minor increase in client state and CSS; purely presentational/UX change.
+  - reasoning.md created documenting the steps. Aligns with ADR #23 and all previous homepage evolution patterns.
