@@ -323,4 +323,10 @@
   - Storage backend parity maintained (file + Cosmos).
   - No impact on standard links, expiration, custom slugs, or other features.
   - Backward compatible; existing data and behavior unchanged.
-  - Added reasoning.md + this ADR entry #30.
+  - Added reasoning.md + this ADR entry 
+    
+  ## 31. Decay Link Section UX Implementation (Full-Width Independent Module)
+* **Date:** 2024-11-12
+* **Context:** User request to implement the "Decay Link" section per detailed UX Specification: secondary independent full-width single-column module placed directly below page title + primary Standard shortener. Warm amber/red borders, 🔥 icon, exact title + microcopy, streamlined single input (placeholder "Paste your confidential URL here..."), no advanced options, prominent red/orange "Create Self-Destructing Link" CTA.
+* **Decision:** Refactored homepage layout in app/page.js so Decay form lives outside the .home-split (after it) to achieve full-width placement below title/Standard. Added exact microcopy, labels, placeholder, and CTA per spec. Extended app/globals.css with dedicated .decay-form styling (amber border #b45309, warm bg, red .decay-cta button). Preserved all prior decay backend, grey-out mutual exclusion, result display, retro styling, and split layout for primary Standard form. No backend changes.
+* **Consequences:** Delivers exact UX layout and visual cues requested. Clear spatial separation between Standard (primary) and Decay (secondary security module). Warm tones signal purpose shift while maintaining overall Intranet/Substack retro theme. Streamlined input reduces cognitive load. All existing single-use decay features (bot protection, 410 page, permanent retention) remain fully functional. Minor presentational change only; 100% backward compatible with ADRs #15, #23–#30.

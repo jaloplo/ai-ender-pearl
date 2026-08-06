@@ -236,7 +236,7 @@ export default function ShortenPage() {
           </p>
         </div>
 
-        {/* Right side: Two separate forms - Standard Link on top, Decay Link below. No tabs. */}
+        {/* Right side: Standard Link form only (primary) */}
         <div className="right-panel">
           {/* Standard Link Form - primary eye-catcher */}
           <form 
@@ -370,102 +370,103 @@ export default function ShortenPage() {
               {standardLoading ? 'Shortening...' : 'Shorten URL'}
             </button>
           </form>
+        </div>
+      </div>
 
-          {/* Decay Link Form - placed directly below the Standard Link form, visually differentiated */}
-          <form 
-            onSubmit={(e) => handleSubmit(e, decayUrl, true)} 
-            className={`prominent-form decay-form ${standardLoading ? 'greyed-out' : ''}`}
-          >
-            <strong className="form-section-title decay">Decay Link (Burn After Reading)</strong>
+      {/* Decay Link Section: dedicated full-width single-column module placed directly below the page title and the primary Standard link shortener block.
+          Uses warm tones (red/amber borders), security iconography, streamlined input, no advanced options, per UX specification. */}
+      <form 
+        onSubmit={(e) => handleSubmit(e, decayUrl, true)} 
+        className={`prominent-form decay-form ${standardLoading ? 'greyed-out' : ''}`}
+      >
+        <strong className="form-section-title decay">🔥 Decay Link (Burn After Reading)</strong>
 
-            {/* Contextual notice banner for Decay mode */}
-            <div className="decay-banner">
-              🛡️ <strong>Self-Destruct Mode:</strong> This link will be permanently erased from the server immediately after the first click.
-            </div>
+        {/* Reassuring microcopy immediately below title explaining value prop */}
+        <div className="decay-microcopy">
+          Need to send passwords, tokens, or confidential links? Generate a single-use link. The moment it is clicked, it will be permanently erased from our servers.
+        </div>
 
-            <label htmlFor="url-decay">Paste confidential URL here...</label>
-            <input
-              type="text"
-              id="url-decay"
-              value={decayUrl}
-              onChange={(e) => setDecayUrl(e.target.value)}
-              placeholder="https://example.com/confidential-document"
-              disabled={anyLoading}
-              className="prominent-input"
-            />
+        <label htmlFor="url-decay">Confidential URL</label>
+        <input
+          type="text"
+          id="url-decay"
+          value={decayUrl}
+          onChange={(e) => setDecayUrl(e.target.value)}
+          placeholder="Paste your confidential URL here..."
+          disabled={anyLoading}
+          className="prominent-input"
+        />
 
-            {/* No advanced options for Decay - streamlined per design */}
+        {/* No advanced options for Decay - streamlined per design (no Custom Slug, Expiration, Privacy) */}
 
-            <button 
-              type="submit" 
-              disabled={anyLoading} 
-              className="prominent-button"
-            >
-              {decayLoading ? 'Creating Self-Destructing Link...' : 'Create Self-Destructing Link'}
-            </button>
-          </form>
+        <button 
+          type="submit" 
+          disabled={anyLoading} 
+          className="prominent-button decay-cta"
+        >
+          {decayLoading ? 'Creating Self-Destructing Link...' : 'Create Self-Destructing Link'}
+        </button>
+      </form>
 
-          {error && (
-            <div className="error">
-              {error}
+      {error && (
+        <div className="error">
+          {error}
+        </div>
+      )}
+
+      {result && (
+        <div className="result">
+          <strong>Shortened URL</strong><br />
+          <a href={result.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">
+            {result.shortUrl}
+          </a>
+          <br /><br />
+          <strong>Original:</strong> {result.original}<br />
+          {result.title && <><strong>Title:</strong> {result.title}<br /></>}
+          <strong>Code:</strong> {result.id}<br />
+          <strong>Visibility:</strong> {result.private ? 'Private' : 'Public'}<br />
+          {result.decay && (
+            <><strong>Type:</strong> <span style={{ color: '#b91c1c', fontWeight: 600 }}>Decay (Burn After Reading)</span><br /></>
+          )}
+          {result.expiresAt && (
+            <><strong>Expires At:</strong> {formatExpiration(result.expiresAt)}<br /></>
+          )}
+          {result.maxClicks != null && (
+            <><strong>Max Clicks:</strong> {result.maxClicks}<br /></>
+          )}
+          <span className="metadata">Created: {new Date(result.created).toLocaleString()}</span>
+
+          {/* Decay-specific warning note */}
+          {result.decay && (
+            <div className="decay-warning">
+              ⚠️ Link ready! Remember, it will self-destruct as soon as the recipient opens it.
             </div>
           )}
 
-          {result && (
-            <div className="result">
-              <strong>Shortened URL</strong><br />
-              <a href={result.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">
-                {result.shortUrl}
-              </a>
-              <br /><br />
-              <strong>Original:</strong> {result.original}<br />
-              {result.title && <><strong>Title:</strong> {result.title}<br /></>}
-              <strong>Code:</strong> {result.id}<br />
-              <strong>Visibility:</strong> {result.private ? 'Private' : 'Public'}<br />
-              {result.decay && (
-                <><strong>Type:</strong> <span style={{ color: '#b91c1c', fontWeight: 600 }}>Decay (Burn After Reading)</span><br /></>
-              )}
-              {result.expiresAt && (
-                <><strong>Expires At:</strong> {formatExpiration(result.expiresAt)}<br /></>
-              )}
-              {result.maxClicks != null && (
-                <><strong>Max Clicks:</strong> {result.maxClicks}<br /></>
-              )}
-              <span className="metadata">Created: {new Date(result.created).toLocaleString()}</span>
-
-              {/* Decay-specific warning note */}
-              {result.decay && (
-                <div className="decay-warning">
-                  ⚠️ Link ready! Remember, it will self-destruct as soon as the recipient opens it.
-                </div>
-              )}
-
-              {/* QR Code display */}
-              {result.qrCode && (
-                <div style={{ marginTop: '16px' }}>
-                  <strong>QR Code</strong>
-                  <div style={{ marginTop: '8px' }}>
-                    <img 
-                      src={result.qrCode} 
-                      alt={`QR code for ${result.shortUrl}`} 
-                      style={{ 
-                        width: '240px', 
-                        height: '240px', 
-                        border: '1px solid var(--color-border-subtle)',
-                        borderRadius: '4px',
-                        background: '#fff'
-                      }} 
-                    />
-                  </div>
-                  <span className="metadata" style={{ fontSize: '11px' }}>
-                    Scan to open • Logo integrated (brand logo, maximized size)
-                  </span>
-                </div>
-              )}
+          {/* QR Code display */}
+          {result.qrCode && (
+            <div style={{ marginTop: '16px' }}>
+              <strong>QR Code</strong>
+              <div style={{ marginTop: '8px' }}>
+                <img 
+                  src={result.qrCode} 
+                  alt={`QR code for ${result.shortUrl}`} 
+                  style={{ 
+                    width: '240px', 
+                    height: '240px', 
+                    border: '1px solid var(--color-border-subtle)',
+                    borderRadius: '4px',
+                    background: '#fff'
+                  }} 
+                />
+              </div>
+              <span className="metadata" style={{ fontSize: '11px' }}>
+                Scan to open • Logo integrated (brand logo, maximized size)
+              </span>
             </div>
           )}
         </div>
-      </div>
+      )}
 
       {/* Feature: Anonymous Usage Stats Dashboard Teaser */}
       <div className="stats-row stats-teaser">

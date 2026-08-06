@@ -1753,3 +1753,107 @@ th[style*="cursor: pointer"]:hover {
     right: 8px;
   }
 }
+/* ========================================
+   DECAY LINK SECTION (per UX Specification)
+   Dedicated full-width single-column module placed directly below 
+   the page title + primary Standard shortener block.
+   Warm tones (subtle amber/red borders), security iconography,
+   streamlined single input, no advanced options, prominent red/orange CTA.
+   ======================================== */
+
+.decay-form {
+  /* Dedicated card / bordered section with warm tones */
+  border: 2px solid #b45309; /* subtle amber border */
+  background-color: #fffbeb; /* warm amber-tinted light bg */
+  padding: 20px 24px;
+  margin-top: 32px;
+  margin-bottom: 24px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(180, 83, 9, 0.08);
+  /* full width of container (home-centered) */
+}
+
+.decay-form .form-section-title.decay {
+  color: #92400e; /* warm brown/reddish */
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.decay-microcopy {
+  font-size: 14px;
+  line-height: 1.45;
+  color: #78350f;
+  margin-bottom: 16px;
+  padding: 8px 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.decay-form label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #78350f;
+  margin-bottom: 6px;
+}
+
+.decay-form .prominent-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #d97706;
+  background-color: #fff;
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+.decay-form .prominent-input:focus {
+  border-color: #b45309;
+  box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.15);
+}
+
+/* Prominent CTA button with danger/warning accent (red or orange) */
+.decay-cta {
+  background-color: #dc2626; /* danger red */
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 28px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.1s ease, transform 0.05s ease;
+  display: inline-block;
+  min-width: 200px;
+}
+
+.decay-cta:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  background-color: #b91c1c;
+}
+
+.decay-cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  background-color: #9ca3af;
+}
+
+/* Responsive for decay section */
+@media (max-width: 768px) {
+  .decay-form {
+    padding: 16px 18px;
+    margin-top: 24px;
+  }
+  
+  .decay-form .form-section-title.decay {
+    font-size: 16px;
+  }
+  
+  .decay-cta {
+    width: 100%;
+    padding: 12px 20px;
+    min-width: auto;
+  }
+}
