@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { findUrlByShort, logAccess, isUrlExpired, deleteShortUrl } from '@/app/lib/urls';
+import { findUrlByShort, logAccess, isUrlExpired } from '@/app/lib/urls';
 
 // List of common crawler / link preview User-Agents to protect decay links from accidental burn
 const CRAWLER_USER_AGENTS = [
@@ -52,7 +52,7 @@ function renderBurnedPage(short, entry = null) {
     <div class="status">
       This link was configured to self-destruct after its first view and is no longer available.
     </div>
-    <p>The original destination can no longer be reached via this short URL. It has been permanently erased from the server.</p>
+    <p>The original destination can no longer be reached via this short URL. The link record is retained for internal statistics only.</p>
     <div class="meta">
       Short code: <code>${short}</code><br>
       ${entry && entry.created ? `Originally created: ${new Date(entry.created).toLocaleString()}<br>` : ''}
@@ -162,21 +162,16 @@ export async function GET(request, { params }) {
         console.error('Failed to log access stats:', logErr);
       }
 
-      // If this was a decay link (first human access), immediately delete/burn it after logging
-      if (isDecay) {
-        try {
-          await deleteShortUrl(short);
-        } catch (delErr) {
-          console.error('Failed to burn/decay short URL after access:', delErr);
-        }
-      }
+      // NOTE: Decay links are NO LONGER deleted from the database.
+      // They are kept permanently for internal statistics / access logs.
+      // The hasBeenAccessed (stats.length > 0) check above prevents re-use after first access.
+      // (Previously we called deleteShortUrl here for decay; that has been removed per requirement.)
 
       // Perform 302 redirect to the original URL
       return NextResponse.redirect(entry.original, 302);
     }
 
-    // If not found (e.g. already burned decay link or invalid), render the dedicated destroyed status page
-    // (avoids generic 404 for burned single-use links per spec)
+    // If not found (e.g. invalid or pre-existing burned link), render the dedicated destroyed status page
     return renderBurnedPage(short);
   } catch (error) {
     console.error('Redirect error:', error);

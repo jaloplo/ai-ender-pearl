@@ -245,3 +245,82 @@
   - 100% backward compatible; no impact on standard shortening flows or prior features (ADRs 1-24).
   - New pattern: creation-time "mode" flags with specialized redirect handling (reusable for future ephemeral link types).
   - Added reasoning.md + this ADR entry. Project memory updated.
+## 26. Unify Styles of Standard Link and Decay Link Tabs
+* **Date:** 2024-11-07
+* **Context:** User request to unify the visual design of the "Standard Link" and "Decay Link" tabs (and related options) so they feel like two choices inside a single form rather than two distinct modes. Prior implementation (ADR #25) used separate tab classes and decay-specific form/button/result styles (warm orange tints, special borders), making the tabs visually different even in active/inactive states.
+* **Decision:** 
+  - Moved tab buttons inside the single `.prominent-form` container in `app/page.js`.
+  - Removed all decay-specific class conditionals from form, button, and result elements.
+  - Rewrote tab CSS in `app/globals.css` so `.mode-tab` (and container) rules are identical for both tabs: same hover, same active state (using shared brand accent underline), same backgrounds/borders.
+  - Only kept functional/contextual decay elements (banner, warning note) that do not affect tab appearance.
+  - Tabs now blend into the form top edge for a "one form" perception.
+* **Consequences:** 
+  - Both tabs now render and transition with exactly the same styles in selected and unselected states.
+  - Stronger sense of a unified shortening form with mode choice at the top.
+  - Functional decay behaviors (hidden advanced options, special payload, self-destruct messaging) preserved.
+  - No new colors or breaking changes; fully aligned with retro Intranet/Substack palette and prior homepage evolution (ADRs #23-25).
+  - Added reasoning.md and this ADR entry #26. Project memory will be synced.
+## 27. Tab Visual Adjustments for Standard Link and Decay Link
+* **Date:** 2024-11-08
+* **Context:** User request to refine the "Standard Link" and "Decay Link" tabs/option box: remove green border on selected tab, remove rounded corners, make tabs adapt full width to the option box below, and apply red warning background color specifically to the "Decay Link" option box.
+* **Decision:** 
+  - In `app/page.js`: Added conditional `decay-mode` class to the `.mode-tabs` container (`className={`mode-tabs ${isDecayMode ? 'decay-mode' : ''}`}`) to enable targeted styling for decay without altering logic.
+  - In `app/globals.css`: Appended new CSS block with overrides:
+    - `.mode-tabs { margin: 0 0 16px 0 !important; border-radius: 0 !important; }` (full width alignment + square corners).
+    - `.mode-tab.active { box-shadow: none !important; }` (removes green selection border).
+    - `.mode-tabs.decay-mode { background-color: #fee2e2 !important; ... }` (red warning tint for Decay Link).
+    - Responsive and active-state refinements included.
+  - Preserved all prior tab unification (ADR #26), decay functionality, retro styling, and no changes to JS logic, backend, or other UI.
+* **Consequences:** 
+  - Tabs now render with square corners, flush width matching the form inputs/options below, and no green border on selection.
+  - Decay Link tab area receives explicit red warning background when active (soft red #fee2e2).
+  - Visual request fully met with minimal, isolated CSS + one class toggle.
+  - 100% backward compatible; no regressions to shortening flows, auth, stats, or prior ADRs.
+  - Added reasoning.md documenting steps. New pattern for mode-specific warning backgrounds established for future ephemeral features.
+  - Files impacted: app/page.js, app/globals.css, ADR.md (this entry #27), reasoning.md.
+## 28. Separate Standard Link and Decay Link Forms (Remove Tabs)
+* **Date:** 2024-11-09
+* **Context:** User request to split the "Standard Link" and "Decay Link" into two different forms (Decay below Standard), remove the tabs entirely, use the titles as section titles + bottom buttons, while keeping identical styles, colors, fonts, and overall design as the rest of the web app (Intranet from the Trenches retro/Substack palette).
+* **Decision:** 
+  - Refactored `app/page.js` to use two independent `<form>` elements inside the right panel of the split layout (no shared `mode` state or tab UI).
+  - Separate controlled inputs (`standardUrl`, `decayUrl`).
+  - `handleSubmit` generalized to accept specific URL value + decay flag.
+  - Standard form retains full Advanced Options collapsible + login gating.
+  - Decay form is streamlined (banner + input + dedicated button).
+  - Added `.form-section-title` CSS class (reusing Georgia serif + existing text colors) and spacing rule between the two forms.
+  - Preserved `.decay-banner` / `.decay-warning` as contextual (non-tab) elements.
+  - All prior prominent-form, button, option, result, stats, and retro styling rules left untouched.
+* **Consequences:** 
+  - Tabs completely removed; two distinct titled forms stacked vertically.
+  - UX improved for independent use of each link type.
+  - 100% visual and functional consistency with existing design system (no new colors, fonts, or layout patterns).
+  - Decay backend behavior, auth gating, result display, QR, public stats, etc. fully preserved.
+  - Added reasoning.md + this ADR entry #28. Minor client-only change; no backend impact.
+  - Aligns with prior homepage evolution (ADRs #15 split layout, #23-27 advanced/decay work).
+## 29. Clear Differentiation + Grey-Out Between Standard and Decay Forms + Retain Decay Records for Stats
+* **Date:** 2024-11-10
+* **Context:** User request to improve discoverability and focus: make "Standard Link" the primary eye-catcher while ensuring users notice the "Decay Link" option. When one shortening action is in progress the other form must be greyed out (visually disabled) without changing the inactive button's text. Additionally, Decay (burn-after-reading) links must no longer be deleted from the database after first use; they must be kept permanently for internal statistics and access logs.
+* **Decision:** 
+  - Refactored homepage forms in `app/page.js` with separate loading flags (`standardLoading`, `decayLoading`) and `anyLoading` guard. Applied conditional `greyed-out` class to the inactive form. Inputs/buttons disabled when anyLoading. Buttons retain original labels.
+  - Added visual differentiation in `app/globals.css`: Standard form gets "Recommended" badge; Decay form receives left red accent bar + warm background tint + reddish title. New `.greyed-out` rules (opacity 0.42, pointer-events none, forced grey button).
+  - Removed `deleteShortUrl` call from `app/[short]/route.js` for decay links (first human access now only logs + redirects; subsequent accesses still show 410 destroyed page via stats check). Updated destroyed page copy to mention records are retained for stats. Removed unused import.
+  - Minor clarification text update in `app/list/page.js`.
+  - Preserved all prior decay protections (bot UA filter, private flag, hasBeenAccessed guard), dual storage, auth, QR, public stats exclusion, retro styling, and split-form layout.
+* **Consequences:** 
+  - Users' eyes are drawn first to Standard Link; Decay is clearly secondary but discoverable.
+  - Mutual exclusion during shortening prevents confusion; inactive button text never changes.
+  - Decay links now persist forever in DB (file or Cosmos) for admin stats/listing while remaining single-use for visitors.
+  - No breaking changes to existing data or APIs. 100% backward compatible with prior ADRs (esp. #25-28 decay work).
+  - Added reasoning.md + this ADR entry #29. Files impacted: app/page.js, app/globals.css, app/[short]/route.js, app/list/page.js.
+## 30. Decay Link Re-creation for Previously Used (Closed) URLs
+* **Date:** 2024-11-11
+* **Context:** User request for "Decay Link" functionality: If a URL has already been shortened as a decay link and has been used (now closed), requesting the same URL again for a Decay Link must insert a *new* record in the database instead of reusing the old one.
+* **Decision:** Updated duplicate/original-URL lookup logic inside `addShortUrl` (file impl in `app/lib/urls.js` and Mongo/Cosmos impl in `app/lib/cosmos.js`). For decay mode only: reuse an existing decay record *only* if it has never been accessed (`stats.length === 0`). Otherwise generate a fresh short code and insert a brand-new record. Standard (non-decay) links retain original reuse behavior. Minor clarification added to list page description. No changes to shorten API, redirect handler, UI forms, or data model.
+* **Consequences:** 
+  - Users can now obtain fresh single-use decay links for the same original URL after a prior decay instance has been consumed.
+  - Each decay record remains independently burnable (first access logs + redirects; later accesses show 410 destroyed page).
+  - All prior decay guarantees preserved (always private, bot protection, exclusion from public stats/recent, permanent retention for analytics).
+  - Storage backend parity maintained (file + Cosmos).
+  - No impact on standard links, expiration, custom slugs, or other features.
+  - Backward compatible; existing data and behavior unchanged.
+  - Added reasoning.md + this ADR entry #30.

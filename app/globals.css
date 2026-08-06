@@ -582,9 +582,9 @@ footer {
 
 /* Enhanced form container for visual prominence */
 .prominent-form {
-  background-color: var(--color-bg-secondary);
-  padding: 28px 32px;
-  border: 2px solid #d4d0c4; /* slightly stronger border for card-like distinction, retro beige tone */
+  background-color: transparent;
+  padding: 0;
+  border: 0px solid #d4d0c4; /* slightly stronger border for card-like distinction, retro beige tone */
   margin-bottom: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
@@ -674,8 +674,8 @@ footer {
   }
   
   .prominent-form {
-    padding: 20px 18px;
-    border-width: 1px;
+    padding: 0;
+    border-width: 0;
   }
   
   .prominent-input {
@@ -960,7 +960,7 @@ footer {
 
 /* Make the form and result fit nicely in right panel */
 .right-panel .prominent-form {
-  padding: 20px 24px;
+  padding: 32px 32px;
   margin-bottom: 16px;
 }
 
@@ -1041,7 +1041,7 @@ footer {
 .prominent-form {
   border: none !important;
   box-shadow: none;
-  background-color: var(--color-bg-secondary);
+  background-color: transparent;
 }
 
 /* New stats row after the main split */
@@ -1442,70 +1442,68 @@ th[style*="cursor: pointer"]:hover {
   }
 }
 /* ========================================
-   DECAY LINK (BURN AFTER READING) - Tabbed UI + Visual States
-   Per functional & UX specification.
+   UNIFIED TABS FOR STANDARD LINK AND DECAY LINK
+   Tabs are now inside the single prominent-form to feel as one form.
+   Both tabs use identical styles for selected (active) and unselected modes.
+   No visual differentiation between the two tab types.
+   Contextual elements (banner, warning) remain for decay mode only.
    ======================================== */
 
-/* Tab selector container */
+/* Tab selector container - unified, blends into form */
 .mode-tabs {
   display: flex;
-  margin-bottom: 12px;
-  border-bottom: 2px solid var(--color-border-subtle);
-  gap: 0;
+  margin: -28px -32px 16px -32px; /* pull to edges of form padding for seamless integration */
+  /*border-bottom: 1px solid var(--color-border-subtle);*/
+  background-color: #f0f0e8; /* subtle retro tint to match advanced header */
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
 }
 
-/* Individual tab buttons */
+/* Individual tab buttons - identical styles for both Standard and Decay */
 .mode-tab {
   flex: 1;
   padding: 12px 16px;
   font-size: 15px;
   font-weight: 600;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-subtle);
-  border-bottom: none;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--color-border-subtle);
+  border-radius: 0;
   cursor: pointer;
-  transition: all 0.15s ease;
+  /*transition: all 0.1s ease;*/
   color: var(--color-text-primary);
   text-align: center;
-}
-
-.mode-tab:first-child {
-  border-radius: 4px 0 0 0;
+  position: relative;
 }
 
 .mode-tab:last-child {
-  border-radius: 0 4px 0 0;
+  border-right: none;
 }
 
 .mode-tab:hover:not(.active):not(:disabled) {
-  background: #f0f0e8;
+  background: #e8e4d9;
 }
 
 .mode-tab.active {
   background: var(--color-bg-primary);
-  border-color: var(--color-border-subtle);
-  border-bottom: 2px solid var(--color-bg-primary);
-  margin-bottom: -2px;
   font-weight: 700;
-  position: relative;
-  z-index: 1;
+  color: var(--color-text-primary);
+  /* subtle bottom indicator using box-shadow for clean selected state */
+  /*box-shadow: inset 0 -3px 0 var(--color-brand-accent);*/
 }
 
-/* Decay tab specific active styling (warm/reddish tone) */
+.mode-tab:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Remove any prior decay-specific tab overrides to ensure identical appearance */
+.mode-tab.decay-tab,
 .mode-tab.decay-tab.active {
-  background: #fff7ed; /* warm subtle orange tint */
-  border-color: #fed7aa;
-  color: #9a3412;
+  /* intentionally empty: both tabs now share exact same rules above */
 }
 
-/* Decay form container - subtle warm/reddish card tone */
-.prominent-form.decay-form {
-  background-color: #fffaf0; /* very light warm orange */
-  border: 2px solid #fed7aa !important;
-  box-shadow: 0 1px 3px rgba(154, 52, 18, 0.06);
-}
-
-/* Self-destruct info banner */
+/* Self-destruct info banner (decay only - contextual, not tab style) */
 .decay-banner {
   background-color: #fefce8; /* soft yellow */
   border: 1px solid #fde047;
@@ -1521,23 +1519,7 @@ th[style*="cursor: pointer"]:hover {
   font-weight: 600;
 }
 
-/* Decay primary action button (danger/warning accent) */
-.prominent-button.decay-button {
-  background-color: #c2410c; /* warm orange-red */
-  color: #fff;
-}
-
-.prominent-button.decay-button:hover {
-  background-color: #9a3412;
-  opacity: 1;
-}
-
-/* Result block when decay link was created */
-.result.decay-result {
-  border-color: #fed7aa;
-  background-color: #fffaf0;
-}
-
+/* Decay-specific warning note (kept for UX context in result) */
 .decay-warning {
   margin-top: 14px;
   padding: 10px 12px;
@@ -1552,22 +1534,222 @@ th[style*="cursor: pointer"]:hover {
 /* Responsive adjustments for tabs */
 @media (max-width: 768px) {
   .mode-tabs {
+    margin: -20px -18px 12px -18px;
     flex-direction: column;
+    border-radius: 0;
     border-bottom: none;
   }
   
   .mode-tab {
-    border-radius: 4px !important;
-    border: 1px solid var(--color-border-subtle);
-    margin-bottom: 6px;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border-subtle);
+    border-radius: none;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+  
+  .mode-tab:last-child {
+    border-bottom: none;
   }
   
   .mode-tab.active {
-    margin-bottom: 6px;
-    border-bottom: 1px solid var(--color-border-subtle);
+    /*box-shadow: inset 0 -2px 0 var(--color-brand-accent);*/
+  }
+}
+/* ========================================
+   TAB ADJUSTMENTS FOR STANDARD LINK / DECAY LINK (per user request)
+   - Remove green border (inset shadow) when tab selected
+   - Remove rounded corners
+   - Adapt tabs full width to match the option box / input below (no side overhang)
+   - Red warning background color for the "Decay Link" option box (when decay-mode active)
+   ======================================== */
+
+.mode-tabs {
+  margin: 0 0 16px 0 !important; /* adapt the whole width of the tabs to the option box below (aligns with prominent-input and .option widths inside form padding) */
+  border-radius: 0 !important; /* remove the rounded corners */
+}
+
+.mode-tab.active {
+  box-shadow: none !important; /* remove the green border when the tab is selected */
+  border-bottom: 0px solid var(--color-brand-accent); /* keep a subtle indicator but not green box-shadow; using border for selected if needed, but can be none */
+}
+
+.mode-tabs.decay-mode {
+  /*background-color: #fee2e2 !important;*/ /* red color as a warning sign in the background of the "Decay Link" option box */
+  /*border-bottom-color: #fecaca !important;*/
+}
+
+/* Ensure decay active tab stands out with warning but no green */
+.mode-tabs.decay-mode .mode-tab.active {
+  background-color: #fff1f2 !important;
+  /*border-bottom-color: #f87171 !important;*/
+}
+
+/* Responsive overrides for the adjusted tabs (no radius, adapted width) */
+@media (max-width: 768px) {
+  .mode-tabs {
+    margin: 0 0 12px 0 !important;
+    border-radius: 0 !important;
   }
   
-  .prominent-form.decay-form {
-    padding: 18px 16px;
+  .mode-tab.active {
+    box-shadow: none !important;
+    border-bottom: 2px solid var(--color-brand-accent);
+  }
+  
+  .mode-tabs.decay-mode {
+    background-color: #fee2e2 !important;
+  }
+}
+
+/* ========================================
+   SEPARATE FORMS FOR STANDARD LINK AND DECAY LINK
+   Per user request: Split into two distinct forms (Standard on top, Decay below).
+   No tabs. Use titles + bottom buttons. Preserve exact retro Intranet/Substack styles,
+   colors (#66cd7a accent, beige tones, Georgia headings, borders, fonts, etc.).
+   ======================================== */
+
+.form-section-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+  font-family: Georgia, "Times New Roman", Times, serif;
+  line-height: 1.2;
+}
+
+/* Ensure the two forms are visually separated but use identical prominent-form treatment */
+.right-panel .prominent-form + .prominent-form {
+  margin-top: 24px;
+}
+
+/* Keep decay banner styling (contextual only, not tab) */
+.decay-banner {
+  background-color: #fefce8; /* soft yellow */
+  border: 1px solid #fde047;
+  color: #713f12;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  border-radius: 4px;
+}
+
+.decay-banner strong {
+  font-weight: 600;
+}
+
+/* Decay-specific warning note (kept for UX context in result) */
+.decay-warning {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 13px;
+  line-height: 1.4;
+  border-radius: 3px;
+}
+
+/* ========================================
+   CLEAR DIFFERENTIATION + GREYED OUT FOR STANDARD / DECAY FORMS
+   Per user request:
+   - Make Standard Link the primary eye-catcher (top, normal styling)
+   - Decay Link is secondary but noticeable (distinct red/warning accents)
+   - When one is active (loading), the other form is greyed out (opacity, no interaction)
+   - Buttons do not change state/text on the inactive form
+   ======================================== */
+
+/* Standard Link form - primary, clean, eye-catching */
+.right-panel .prominent-form.standard-form {
+  /* slightly more prominent by default */
+  position: relative;
+}
+
+.right-panel .prominent-form.standard-form .form-section-title.standard {
+  color: var(--color-text-primary);
+  font-size: 17px;
+}
+
+/* Decay Link form - visually differentiated as secondary/warning option */
+.right-panel .prominent-form.decay-form {
+  position: relative;
+  /* subtle left accent bar to differentiate without clashing with retro style */
+  border-left: 5px solid #b91c1c;
+  background-color: #fffaf5; /* very subtle warm off-white to stand out as different */
+}
+
+.right-panel .prominent-form.decay-form .form-section-title.decay {
+  color: #991b1b;
+  font-size: 16px;
+}
+
+/* Greyed out state: when the OTHER option is being used */
+.right-panel .prominent-form.greyed-out {
+  opacity: 0.42;
+  pointer-events: none;
+  filter: grayscale(0.15);
+  transition: opacity 0.2s ease;
+}
+
+.right-panel .prominent-form.greyed-out input,
+.right-panel .prominent-form.greyed-out button,
+.right-panel .prominent-form.greyed-out .advanced-header,
+.right-panel .prominent-form.greyed-out .option {
+  cursor: not-allowed !important;
+}
+
+.right-panel .prominent-form.greyed-out .prominent-button {
+  background-color: #9ca3af !important;
+  color: #f3f4f6 !important;
+}
+
+/* Ensure the active form stays fully visible and interactive */
+.right-panel .prominent-form:not(.greyed-out) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Make the Standard title stand out a bit more to draw the eye first */
+.form-section-title.standard {
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.form-section-title.decay {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+/* Small visual cue under Standard to indicate it's the default/recommended */
+.standard-form::before {
+  content: "Recommended for most links";
+  position: absolute;
+  top: -8px;
+  right: 12px;
+  font-size: 10px;
+  color: #166534;
+  background: #dcfce7;
+  padding: 1px 6px;
+  border-radius: 2px;
+  border: 1px solid #bbf7d0;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 768px) {
+  .right-panel .prominent-form.decay-form {
+    border-left-width: 4px;
+    padding-left: 10px;
+  }
+  .standard-form::before {
+    font-size: 9px;
+    top: -6px;
+    right: 8px;
   }
 }

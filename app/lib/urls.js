@@ -67,7 +67,19 @@ async function addShortUrlFile(originalUrl, isPrivate = false, title = null, cus
   const shorts = await readUrlsFile();
   
   // Check if already exists
-  const existing = shorts.find(item => item.original === originalUrl);
+  // For Decay links: only treat as duplicate (reuse) if there is an *unused* decay link for the same original URL.
+  // This allows creating a *new* decay record for the same original URL once a previous decay link has been used/closed.
+  // For standard links: keep original behavior (reuse any existing for the original URL).
+  let existing;
+  if (isDecay) {
+    existing = shorts.find(item => 
+      item.original === originalUrl && 
+      !!item.decay && 
+      (item.stats || []).length === 0
+    );
+  } else {
+    existing = shorts.find(item => item.original === originalUrl);
+  }
   if (existing) {
     // If existing but no qrCode, generate one now (backfill)
     if (!existing.qrCode) {

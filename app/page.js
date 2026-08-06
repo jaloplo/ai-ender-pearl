@@ -3,25 +3,24 @@
 import { useState, useEffect } from 'react';
 
 export default function ShortenPage() {
-  const [url, setUrl] = useState('');
+  // Separate URL states for each independent form
+  const [standardUrl, setStandardUrl] = useState('');
+  const [decayUrl, setDecayUrl] = useState('');
+
   const [isPrivate, setIsPrivate] = useState(false);
   const [customSlug, setCustomSlug] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
   const [maxClicks, setMaxClicks] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [standardLoading, setStandardLoading] = useState(false);
+  const [decayLoading, setDecayLoading] = useState(false);
 
   const [stats, setStats] = useState({ count: 0, recent: [], uniqueDomains: 0, thisMonth: 0, totalClicks: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
-
-  // NEW: Decay Link (Burn After Reading) mode
-  const [mode, setMode] = useState('standard'); // 'standard' | 'decay'
-
-  const isDecayMode = mode === 'decay';
 
   const checkAuthStatus = async () => {
     try {
@@ -35,19 +34,19 @@ export default function ShortenPage() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, urlValue, decay = false) => {
     e.preventDefault();
     setError('');
     setResult(null);
     
-    if (!url.trim()) {
+    if (!urlValue || !urlValue.trim()) {
       setError('Please enter a URL');
       return;
     }
 
     // Optional client-side slug validation (server will enforce too) - only relevant if authenticated AND not decay
     const trimmedSlug = customSlug.trim();
-    if (isAuthenticated && trimmedSlug && !isDecayMode) {
+    if (isAuthenticated && trimmedSlug && !decay) {
       if (trimmedSlug.length < 1 || trimmedSlug.length > 64) {
         setError('Custom alias must be 1-64 characters.');
         return;
@@ -64,24 +63,28 @@ export default function ShortenPage() {
     }
 
     // Client-side validation for expiration - only if authenticated AND not decay
-    if (isAuthenticated && expiresAt && !isDecayMode) {
+    if (isAuthenticated && expiresAt && !decay) {
       const expDate = new Date(expiresAt);
       if (isNaN(expDate.getTime()) || expDate <= new Date()) {
         setError('Expiration date/time must be a valid future date and time.');
         return;
       }
     }
-    if (isAuthenticated && maxClicks && !isDecayMode && (isNaN(parseInt(maxClicks, 10)) || parseInt(maxClicks, 10) < 1)) {
+    if (isAuthenticated && maxClicks && !decay && (isNaN(parseInt(maxClicks, 10)) || parseInt(maxClicks, 10) < 1)) {
       setError('Maximum clicks must be a positive integer.');
       return;
     }
     
-    setLoading(true);
+    if (decay) {
+      setDecayLoading(true);
+    } else {
+      setStandardLoading(true);
+    }
     
     try {
-      const payload = { url: url.trim() };
+      const payload = { url: urlValue.trim() };
 
-      if (isDecayMode) {
+      if (decay) {
         // Decay mode: always private, no custom/exp, pass decay flag
         payload.decay = true;
         // Do not send private/custom/exp for decay (backend enforces)
@@ -112,7 +115,13 @@ export default function ShortenPage() {
         setError(data.error || 'Failed to shorten URL');
       } else {
         setResult(data);
-        setUrl('');
+        // Clear only the relevant input
+        if (decay) {
+          setDecayUrl('');
+        } else {
+          setStandardUrl('');
+        }
+        // Reset advanced fields (they belong to standard)
         setIsPrivate(false);
         setCustomSlug('');
         setExpiresAt('');
@@ -123,7 +132,11 @@ export default function ShortenPage() {
     } catch (err) {
       setError('Network error. Please try again.');
     } finally {
-      setLoading(false);
+      if (decay) {
+        setDecayLoading(false);
+      } else {
+        setStandardLoading(false);
+      }
     }
   };
 
@@ -202,19 +215,8 @@ export default function ShortenPage() {
     }
   };
 
-  // Switch mode and reset non-applicable fields
-  const switchMode = (newMode) => {
-    setMode(newMode);
-    setError('');
-    // When switching to decay, clear advanced fields (they are hidden)
-    if (newMode === 'decay') {
-      setIsPrivate(false);
-      setCustomSlug('');
-      setExpiresAt('');
-      setMaxClicks('');
-      setAdvancedOpen(false); // collapse advanced when in decay
-    }
-  };
+  // Any loading state for shared disables (when one is active the other is greyed)
+  const anyLoading = standardLoading || decayLoading;
 
   return (
     <div className="home-centered">
@@ -234,166 +236,172 @@ export default function ShortenPage() {
           </p>
         </div>
 
-        {/* Right side: Textbox, button, and shortening result */}
+        {/* Right side: Two separate forms - Standard Link on top, Decay Link below. No tabs. */}
         <div className="right-panel">
-          {/* Tabbed selector for Standard vs Decay Link (Burn After Reading) */}
-          <div className="mode-tabs">
-            <button
-              type="button"
-              className={`mode-tab ${mode === 'standard' ? 'active' : ''}`}
-              onClick={() => switchMode('standard')}
-              disabled={loading}
-            >
-              🔗 Standard Link
-            </button>
-            <button
-              type="button"
-              className={`mode-tab decay-tab ${mode === 'decay' ? 'active' : ''}`}
-              onClick={() => switchMode('decay')}
-              disabled={loading}
-            >
-              🔥 Decay Link (Burn After Reading)
-            </button>
-          </div>
-
+          {/* Standard Link Form - primary eye-catcher */}
           <form 
-            onSubmit={handleSubmit} 
-            className={`prominent-form ${isDecayMode ? 'decay-form' : ''}`}
+            onSubmit={(e) => handleSubmit(e, standardUrl, false)} 
+            className={`prominent-form standard-form ${decayLoading ? 'greyed-out' : ''}`}
           >
-            {/* Contextual notice banner for Decay mode */}
-            {isDecayMode && (
-              <div className="decay-banner">
-                🛡️ <strong>Self-Destruct Mode:</strong> This link will be permanently erased from the server immediately after the first click.
-              </div>
-            )}
+            <strong className="form-section-title standard">Standard Link</strong>
 
-            <label htmlFor="url">{isDecayMode ? 'Paste confidential URL here...' : 'Original URL'}</label>
+            <label htmlFor="url-standard">Original URL</label>
             <input
               type="text"
-              id="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder={isDecayMode ? "https://example.com/confidential-document" : "https://example.com/very/long/path/to/your/resource"}
-              disabled={loading}
+              id="url-standard"
+              value={standardUrl}
+              onChange={(e) => setStandardUrl(e.target.value)}
+              placeholder="https://example.com/very/long/path/to/your/resource"
+              disabled={anyLoading}
               className="prominent-input"
             />
 
-            {/* Advanced options are completely hidden in Decay mode (per spec: streamlined form) */}
-            {!isDecayMode && (
-              <div className="advanced-box">
-                <div 
-                  className="advanced-header"
-                  onClick={() => setAdvancedOpen(!advancedOpen)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setAdvancedOpen(!advancedOpen);
-                    }
-                  }}
-                  aria-expanded={advancedOpen}
-                >
-                  <span>Advanced Options {!isAuthenticated && ' (login required)'}</span>
-                  <span className="toggle-icon">{advancedOpen ? '−' : '+'}</span>
-                </div>
-                {advancedOpen && (
-                  <div className="advanced-options">
-                    {/* Custom Alias / Slug input */}
-                    <div className={`option ${!isAuthenticated ? 'greyed' : ''}`}>
-                      <label htmlFor="customSlug">Custom Alias (optional)</label>
-                      <input
-                        type="text"
-                        id="customSlug"
-                        value={customSlug}
-                        onChange={(e) => setCustomSlug(e.target.value)}
-                        placeholder="my-campaign-link or product2025"
-                        disabled={loading || !isAuthenticated}
-                        className="option-input"
-                      />
-                      <span className="metadata" style={{ fontSize: '11px', display: 'block' }}>
-                        Use letters, numbers, - or _ only.
-                      </span>
-                      <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
-                        1-64 chars. Replaces random code. Must be unique.
-                      </span>
-                    </div>
-
-                    {/* Link Expiration controls */}
-                    <div className={`option ${!isAuthenticated ? 'greyed' : ''}`}>
-                      <label>Link Expiration (optional)</label>
-                      <div className="expiration-fields">
-                        <div className="exp-field">
-                          <label htmlFor="expiresAt" className="sub-label">
-                            Expires at (date &amp; time)
-                          </label>
-                          <input
-                            type="datetime-local"
-                            id="expiresAt"
-                            value={expiresAt}
-                            onChange={(e) => setExpiresAt(e.target.value)}
-                            disabled={loading || !isAuthenticated}
-                            className="option-input"
-                          />
-                          <span className="metadata" style={{ fontSize: '11px' }}>Link will stop working after this date/time.</span>
-                        </div>
-                        <div className="exp-field">
-                          <label htmlFor="maxClicks" className="sub-label">
-                            Max total clicks
-                          </label>
-                          <input
-                            type="number"
-                            id="maxClicks"
-                            value={maxClicks}
-                            onChange={(e) => setMaxClicks(e.target.value)}
-                            min="1"
-                            placeholder="e.g. 100"
-                            disabled={loading || !isAuthenticated}
-                            className="option-input"
-                          />
-                          <span className="metadata" style={{ fontSize: '11px' }}>After this many clicks, link deactivates.</span>
-                        </div>
-                      </div>
-                      <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
-                        You can set a date, a click limit, or both. Once reached, the link shows an expiration message instead of redirecting.
-                      </span>
-                    </div>
-
-                    {/* Privacy selection */}
-                    <div 
-                      className={`option privacy-option ${!isAuthenticated ? 'greyed' : ''} ${isPrivate && isAuthenticated ? 'private-active' : ''}`}
-                    >
-                      <label>Privacy (optional)</label>
-                      <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', cursor: isAuthenticated ? 'pointer' : 'default' }}>
-                        <input
-                          type="checkbox"
-                          checked={isPrivate}
-                          onChange={handlePrivateChange}
-                          disabled={loading || !isAuthenticated}
-                          style={{ marginRight: '8px' }}
-                        />
-                        Make it private
-                      </label>
-                      <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
-                        Public is the default value.
-                      </span>
-                      <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
-                        The link will not show in public stats or recent lists.
-                      </span>
-                    </div>
-                  </div>
-                )}
+            {/* Advanced options (only for Standard) */}
+            <div className="advanced-box">
+              <div 
+                className="advanced-header"
+                onClick={() => { if (!anyLoading) setAdvancedOpen(!advancedOpen); }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (!anyLoading) setAdvancedOpen(!advancedOpen);
+                  }
+                }}
+                aria-expanded={advancedOpen}
+              >
+                <span>Advanced Options {!isAuthenticated && ' (login required)'}</span>
+                <span className="toggle-icon">{advancedOpen ? '−' : '+'}</span>
               </div>
-            )}
+              {advancedOpen && (
+                <div className="advanced-options">
+                  {/* Custom Alias / Slug input */}
+                  <div className={`option ${!isAuthenticated ? 'greyed' : ''}`}>
+                    <label htmlFor="customSlug">Custom Alias (optional)</label>
+                    <input
+                      type="text"
+                      id="customSlug"
+                      value={customSlug}
+                      onChange={(e) => setCustomSlug(e.target.value)}
+                      placeholder="my-campaign-link or product2025"
+                      disabled={anyLoading || !isAuthenticated}
+                      className="option-input"
+                    />
+                    <span className="metadata" style={{ fontSize: '11px', display: 'block' }}>
+                      Use letters, numbers, - or _ only.
+                    </span>
+                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                      1-64 chars. Replaces random code. Must be unique.
+                    </span>
+                  </div>
+
+                  {/* Link Expiration controls */}
+                  <div className={`option ${!isAuthenticated ? 'greyed' : ''}`}>
+                    <label>Link Expiration (optional)</label>
+                    <div className="expiration-fields">
+                      <div className="exp-field">
+                        <label htmlFor="expiresAt" className="sub-label">
+                          Expires at (date &amp; time)
+                        </label>
+                        <input
+                          type="datetime-local"
+                          id="expiresAt"
+                          value={expiresAt}
+                          onChange={(e) => setExpiresAt(e.target.value)}
+                          disabled={anyLoading || !isAuthenticated}
+                          className="option-input"
+                        />
+                        <span className="metadata" style={{ fontSize: '11px' }}>Link will stop working after this date/time.</span>
+                      </div>
+                      <div className="exp-field">
+                        <label htmlFor="maxClicks" className="sub-label">
+                          Max total clicks
+                        </label>
+                        <input
+                          type="number"
+                          id="maxClicks"
+                          value={maxClicks}
+                          onChange={(e) => setMaxClicks(e.target.value)}
+                          min="1"
+                          placeholder="e.g. 100"
+                          disabled={anyLoading || !isAuthenticated}
+                          className="option-input"
+                        />
+                        <span className="metadata" style={{ fontSize: '11px' }}>After this many clicks, link deactivates.</span>
+                      </div>
+                    </div>
+                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                      You can set a date, a click limit, or both. Once reached, the link shows an expiration message instead of redirecting.
+                    </span>
+                  </div>
+
+                  {/* Privacy selection */}
+                  <div 
+                    className={`option privacy-option ${!isAuthenticated ? 'greyed' : ''} ${isPrivate && isAuthenticated ? 'private-active' : ''}`}
+                  >
+                    <label>Privacy (optional)</label>
+                    <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', cursor: isAuthenticated && !anyLoading ? 'pointer' : 'default' }}>
+                      <input
+                        type="checkbox"
+                        checked={isPrivate}
+                        onChange={handlePrivateChange}
+                        disabled={anyLoading || !isAuthenticated}
+                        style={{ marginRight: '8px' }}
+                      />
+                      Make it private
+                    </label>
+                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                      Public is the default value.
+                    </span>
+                    <span className="metadata" style={{ fontSize: '11px', display: 'block', marginTop: '6px' }}>
+                      The link will not show in public stats or recent lists.
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <button 
               type="submit" 
-              disabled={loading} 
-              className={`prominent-button ${isDecayMode ? 'decay-button' : ''}`}
+              disabled={anyLoading} 
+              className="prominent-button"
             >
-              {loading 
-                ? (isDecayMode ? 'Creating Self-Destructing Link...' : 'Shortening...') 
-                : (isDecayMode ? 'Create Self-Destructing Link' : 'Shorten URL')}
+              {standardLoading ? 'Shortening...' : 'Shorten URL'}
+            </button>
+          </form>
+
+          {/* Decay Link Form - placed directly below the Standard Link form, visually differentiated */}
+          <form 
+            onSubmit={(e) => handleSubmit(e, decayUrl, true)} 
+            className={`prominent-form decay-form ${standardLoading ? 'greyed-out' : ''}`}
+          >
+            <strong className="form-section-title decay">Decay Link (Burn After Reading)</strong>
+
+            {/* Contextual notice banner for Decay mode */}
+            <div className="decay-banner">
+              🛡️ <strong>Self-Destruct Mode:</strong> This link will be permanently erased from the server immediately after the first click.
+            </div>
+
+            <label htmlFor="url-decay">Paste confidential URL here...</label>
+            <input
+              type="text"
+              id="url-decay"
+              value={decayUrl}
+              onChange={(e) => setDecayUrl(e.target.value)}
+              placeholder="https://example.com/confidential-document"
+              disabled={anyLoading}
+              className="prominent-input"
+            />
+
+            {/* No advanced options for Decay - streamlined per design */}
+
+            <button 
+              type="submit" 
+              disabled={anyLoading} 
+              className="prominent-button"
+            >
+              {decayLoading ? 'Creating Self-Destructing Link...' : 'Create Self-Destructing Link'}
             </button>
           </form>
 
@@ -404,7 +412,7 @@ export default function ShortenPage() {
           )}
 
           {result && (
-            <div className={`result ${result.decay ? 'decay-result' : ''}`}>
+            <div className="result">
               <strong>Shortened URL</strong><br />
               <a href={result.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">
                 {result.shortUrl}

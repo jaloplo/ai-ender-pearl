@@ -621,5 +621,5 @@ export default function ListPage() {
         {searchTerm && ` • ${filteredItems.length} match${filteredItems.length === 1 ? '' : 'es'} for search`}
       </div>
     </>
-  );
+  )
 }
