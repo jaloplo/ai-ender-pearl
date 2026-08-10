@@ -350,3 +350,10 @@
   - QR always encodes the short link (correct analytics path) and is now previewable/downloadable directly from detail view.
   - Full storage parity (file + Cosmos/Mongo). New `getRecentVisits` helper reusable.
   - Added reasoning.md and this ADR entry #32. 100% backward compatible; no breaking changes to existing records or flows.
+  
+## 33. QR Code Regeneration Option on Stats Page
+* **Date:** 2024-11-14
+* **Context:** User request to "Provide the option to generate a new QR code when visiting the stats of a URL" on the /stats/[short] page. Previously QR was only generated at creation time (ADR #18, #32) and displayed in the detail view.
+* **Decision:** Added POST handler to app/api/stats/[short]/route.js that calls new regenerateQrCode() helpers in app/lib/urls.js (file) and app/lib/cosmos.js (Mongo). Updated app/stats/[short]/page.js with a "🔄 Regenerate QR Code" button (secondary style), loading state, success feedback, and immediate UI refresh via setData(). Reuses existing generateQrCodeWithLogo, security (middleware + origin), and styling.
+* **Consequences:** Users (authenticated) can now refresh the QR image on demand from the stats view (e.g. after logo updates or for fresh copies). Instant client update, no reload. Full parity between file and Cosmos storage. Preserves all prior features, retro styling, and security. Minor addition to API surface and client state. Added reasoning.md documenting the implementation.
+

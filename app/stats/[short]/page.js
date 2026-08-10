@@ -17,6 +17,8 @@ export default function StatsPage() {
 
   // For QR download/copy feedback
   const [copySuccess, setCopySuccess] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenerateSuccess, setRegenerateSuccess] = useState(false);
 
   useEffect(() => {
     if (!short) {
@@ -139,6 +141,40 @@ export default function StatsPage() {
     } catch (e) {
       // Last resort
       prompt('Copy this short link:', shortUrl);
+    }
+  };
+
+  // Regenerate QR code (calls POST /api/stats/[short])
+  const handleRegenerateQR = async () => {
+    if (!short || regenerating) return;
+
+    setRegenerating(true);
+    setRegenerateSuccess(false);
+    setError('');
+
+    try {
+      const response = await fetch(`/api/stats/${short}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          window.location.href = '/login';
+          return;
+        }
+        setError(result.error || 'Failed to regenerate QR code');
+      } else {
+        // Update local data with new QR (and any other refreshed fields)
+        setData(result);
+        setRegenerateSuccess(true);
+        setTimeout(() => setRegenerateSuccess(false), 2200);
+      }
+    } catch (err) {
+      setError('Failed to regenerate QR. Is the server running?');
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -269,8 +305,9 @@ export default function StatsPage() {
       </div>
 
       {/* ===================================================== */}
-      {/* 3. QR CODE DISPLAY + ACTIONS IN URL DETAIL VIEW       */}
+      {/* QR CODE DISPLAY + ACTIONS IN URL DETAIL VIEW          */}
       {/* Always encodes the SHORTENED URL (not original)       */}
+      {/* NEW: "Regenerate QR" button added per requirement     */}
       {/* ===================================================== */}
       <div style={{ marginBottom: '32px' }}>
         <h3>QR Code</h3>
@@ -318,11 +355,32 @@ export default function StatsPage() {
                 >
                   {copySuccess ? '✓ Copied!' : '📋 Copy Short Link'}
                 </button>
+                <button 
+                  onClick={handleRegenerateQR}
+                  className="secondary"
+                  disabled={regenerating}
+                  style={{ padding: '6px 14px', fontSize: '13px' }}
+                >
+                  {regenerating ? '⏳ Regenerating...' : '🔄 Regenerate QR Code'}
+                </button>
               </div>
+              {regenerateSuccess && (
+                <div style={{ fontSize: '12px', color: '#166534', textAlign: 'center', marginTop: '4px' }}>
+                  ✓ New QR code generated successfully
+                </div>
+              )}
             </>
           ) : (
             <div className="metadata">
-              No QR code available for this link (regenerate by re-creating the short URL if needed).
+              No QR code available for this link.
+              <button 
+                onClick={handleRegenerateQR}
+                className="secondary"
+                disabled={regenerating}
+                style={{ marginLeft: '8px', padding: '4px 10px', fontSize: '12px' }}
+              >
+                {regenerating ? 'Generating...' : 'Generate QR Code'}
+              </button>
             </div>
           )}
         </div>

@@ -209,6 +209,20 @@ async function getRecentVisitsFile(limit = 50) {
   return allVisits.slice(0, limit);
 }
 
+// Regenerate QR code for an existing short URL (file impl)
+async function regenerateQrCodeFile(short) {
+  const shorts = await readUrlsFile();
+  const idx = shorts.findIndex(item => item.id === short);
+  if (idx === -1) {
+    return null;
+  }
+  const shortUrlForQr = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${short}`;
+  const qrCode = await generateQrCodeWithLogo(shortUrlForQr);
+  shorts[idx].qrCode = qrCode;
+  await saveUrlsFile(shorts);
+  return shorts[idx];
+}
+
 // Public API - delegates to Cosmos (MongoDB API) or file storage
 export async function readUrls() {
   if (useCosmos) {
@@ -231,10 +245,11 @@ export function generateShortCodeFn() {
 export async function findUrlByShort(short) {
   if (useCosmos) {
     const item = await cosmos.findUrlByShort(short);
-    item.stats.forEach(element => {
-      element.is_bot = isBotUserAgent(element.userAgent);
-    });
-    // console.log(item);
+    if (item && item.stats) {
+      item.stats.forEach(element => {
+        element.is_bot = isBotUserAgent(element.userAgent);
+      });
+    }
     return item;
   }
   return findUrlByShortFile(short);
@@ -277,6 +292,13 @@ export async function getRecentVisits(limit = 50) {
     return stats;
   }
   return getRecentVisitsFile(limit);
+}
+
+export async function regenerateQrCode(short) {
+  if (useCosmos) {
+    return cosmos.regenerateQrCode(short);
+  }
+  return regenerateQrCodeFile(short);
 }
 
 // Export validator for potential client or other use

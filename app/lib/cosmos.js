@@ -370,6 +370,25 @@ export async function getRecentVisits(limit = 50) {
   }
 }
 
+// Regenerate QR code for an existing short URL (Cosmos impl)
+export async function regenerateQrCode(short) {
+  try {
+    const coll = await getUrlsCollection();
+    const doc = await coll.findOne({ id: short });
+    if (!doc) {
+      return null;
+    }
+    const shortUrlForQr = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${short}`;
+    const qrCode = await generateQrCodeWithLogo(shortUrlForQr);
+    await coll.updateOne({ id: short }, { $set: { qrCode } });
+    // Return fresh entry
+    return await findUrlByShort(short);
+  } catch (error) {
+    console.error('Cosmos MongoDB regenerateQrCode error:', error);
+    return null;
+  }
+}
+
 function generateShortCode() {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
