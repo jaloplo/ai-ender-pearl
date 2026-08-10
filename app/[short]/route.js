@@ -1,31 +1,19 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { findUrlByShort, logAccess, isUrlExpired } from '@/app/lib/urls';
+import { findUrlByShort, logAccess, isUrlExpired, isBotUserAgent } from '@/app/lib/urls';
 
-// List of common crawler / link preview User-Agents to protect decay links from accidental burn
-const CRAWLER_USER_AGENTS = [
-  'WhatsApp',
-  'Telegram',
-  'Slack',
-  'Discord',
-  'facebookexternalhit',
-  'Twitterbot',
-  'LinkedInBot',
-  'SkypeUriPreview',
-  'Googlebot',
-  'bingbot',
-  'Slackbot',
-  'facebookexternalhit/1.1',
-  'Facebot',
-  'ia_archiver',
-  'crawler',
-  'bot',
+// Dedicated list for decay link protection (prevents accidental burn by preview bots)
+// This can be kept in sync with the central BOT_PATTERNS in urls.js as needed.
+const DECAY_PROTECTION_BOTS = [
+  'WhatsApp', 'Telegram', 'Slack', 'Discord', 'facebookexternalhit',
+  'Twitterbot', 'LinkedInBot', 'SkypeUriPreview', 'Googlebot', 'bingbot',
+  'Slackbot', 'Facebot', 'ia_archiver', 'crawler', 'bot',
 ];
 
-function isCrawler(userAgent) {
+function isDecayProtectionBot(userAgent) {
   if (!userAgent) return false;
   const ua = userAgent.toLowerCase();
-  return CRAWLER_USER_AGENTS.some(crawler => ua.includes(crawler.toLowerCase()));
+  return DECAY_PROTECTION_BOTS.some(crawler => ua.includes(crawler.toLowerCase()));
 }
 
 function renderBurnedPage(short, entry = null) {
@@ -134,11 +122,11 @@ export async function GET(request, { params }) {
 
       const headersList = headers();
       const userAgent = headersList.get('user-agent') || '';
-      const isBot = isCrawler(userAgent);
 
       // For decay links: if crawler/bot preview detected, redirect WITHOUT logging/burning
       // This protects the link from being consumed by link previews (WhatsApp, Telegram, etc.)
-      if (isDecay && isBot) {
+      // Use dedicated protection list (kept in sync with central patterns)
+      if (isDecay && isDecayProtectionBot(userAgent)) {
         return NextResponse.redirect(entry.original, 302);
       }
 

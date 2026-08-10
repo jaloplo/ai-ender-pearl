@@ -330,3 +330,23 @@
 * **Context:** User request to implement the "Decay Link" section per detailed UX Specification: secondary independent full-width single-column module placed directly below page title + primary Standard shortener. Warm amber/red borders, 🔥 icon, exact title + microcopy, streamlined single input (placeholder "Paste your confidential URL here..."), no advanced options, prominent red/orange "Create Self-Destructing Link" CTA.
 * **Decision:** Refactored homepage layout in app/page.js so Decay form lives outside the .home-split (after it) to achieve full-width placement below title/Standard. Added exact microcopy, labels, placeholder, and CTA per spec. Extended app/globals.css with dedicated .decay-form styling (amber border #b45309, warm bg, red .decay-cta button). Preserved all prior decay backend, grey-out mutual exclusion, result display, retro styling, and split layout for primary Standard form. No backend changes.
 * **Consequences:** Delivers exact UX layout and visual cues requested. Clear spatial separation between Standard (primary) and Decay (secondary security module). Warm tones signal purpose shift while maintaining overall Intranet/Substack retro theme. Streamlined input reduces cognitive load. All existing single-use decay features (bot protection, 410 page, permanent retention) remain fully functional. Minor presentational change only; 100% backward compatible with ADRs #15, #23–#30.
+
+## 32. Last 50 Visits Audit Log + Bot Identification + QR Code in Detail View
+* **Date:** 2024-11-13
+* **Context:** User request to implement three features: (1) dedicated section in /app/list/page.js showing strictly the last 50 visit records (LIMIT 50, chrono descending) for real-time audit/traffic analysis; (2) server-side User-Agent bot/crawler detection (Googlebot, Bingbot, Slackbot, Twitterbot, LinkedInBot, WhatsApp, etc.) during redirect, persisted as `is_bot`, with visual badges in both the visits list and the stats access log; (3) display of the generated QR code (always encoding the shortened URL) in the per-URL detail view (`/stats/[short]`) together with Download QR and Copy Short Link actions.
+* **Decision:** 
+  - Added lightweight centralized `isBotUserAgent()` + maintainable `BOT_PATTERNS` list in `app/lib/urls.js` (exported).
+  - Updated redirect handler (`app/[short]/route.js`) to classify visits using the shared detector and pass `isBot` to `logAccess()`.
+  - Extended both storage layers (`app/lib/urls.js` file + `app/lib/cosmos.js`): persist `is_bot` on stats, normalize on read, added `getRecentVisits(limit)` (strict server-side LIMIT + sort desc).
+  - New protected API `app/api/visits/route.js` returning exactly the last 50 visits.
+  - Updated `app/list/page.js`: added visits fetch + full audit table (Timestamp, Short, Original, IP, UA, Referer, Visitor Type) with `BotBadge` (🤖 Bot / 👤 Human) and refresh integration.
+  - Updated `app/stats/[short]/page.js`: added identical `BotBadge` + "Visitor Type" sortable column to Access Log; new QR section rendering the stored QR (short URL), Download PNG button, and Copy Short Link button with clipboard + feedback.
+  - `app/api/stats/[short]/route.js` and existing data flows automatically surface the new fields.
+  - Preserved all prior features (decay, expiration, auth, dual storage, retro styling, list enhancements).
+* **Consequences:** 
+  - Provides the requested real-time audit log limited to 50 records for performance.
+  - Bot detection is fast (simple includes on lowercased UA) and does not delay redirects.
+  - Consistent visual badges across list and stats pages.
+  - QR always encodes the short link (correct analytics path) and is now previewable/downloadable directly from detail view.
+  - Full storage parity (file + Cosmos/Mongo). New `getRecentVisits` helper reusable.
+  - Added reasoning.md and this ADR entry #32. 100% backward compatible; no breaking changes to existing records or flows.

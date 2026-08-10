@@ -8,17 +8,19 @@ const useCosmos = !!process.env.COSMOS_MONGODB_URI;
 
 const DATA_FILE = path.join(process.cwd(), 'data', 'urls.json');
 
-// Slug validation helper (shared logic for custom alias)
-function isValidCustomSlug(slug) {
-  if (!slug || typeof slug !== 'string') return false;
-  const trimmed = slug.trim();
-  if (trimmed.length < 1 || trimmed.length > 64) return false;
-  // Allow letters, numbers, hyphens, underscores. No spaces or other special chars.
-  if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) return false;
-  // Reserved system paths (case-insensitive check)
-  const reserved = ['api', 'login', 'list', 'stats', 'shorten', '_next', 'favicon.ico', 'icon'];
-  if (reserved.includes(trimmed.toLowerCase())) return false;
-  return true;
+// Known bot / crawler User-Agent patterns (lightweight includes check, regularly maintainable list)
+const BOT_PATTERNS = [
+  'bot', 'crawler', 'spider', 'slurp', 'googlebot', 'bingbot', 'baiduspider', 'yandex', 'duckduckbot', 'sogou',
+  'exabot', 'facebot', 'ia_archiver', 'twitterbot', 'linkedinbot', 'slackbot', 'whatsapp', 'telegram', 'discord',
+  'facebookexternalhit', 'skypeuripreview', 'preview', 'fetch', 'scanner', 'curl', 'wget', 'python', 'go-http',
+  'ahrefsbot', 'semrushbot', 'dotbot', 'mj12bot', 'pinterest', 'tumblr', 'vkshare', 'line', 'applebot',
+  'bingpreview', 'msnbot', 'adsbot', 'mediapartners-google', 'petalbot', 'seznambot', 'coccocbot'
+];
+
+function isBotUserAgent(userAgent = '') {
+  if (!userAgent) return false;
+  const ua = userAgent.toLowerCase();
+  return BOT_PATTERNS.some(pattern => ua.includes(pattern));
 }
 
 // File-based implementations (original)
@@ -30,7 +32,13 @@ async function readUrlsFile() {
     // Normalize to always include stats array, qrCode, private flag, title, expiration fields, and decay for backward compat
     return shorts.map(item => ({
       ...item,
-      stats: item.stats || [],
+      stats: (item.stats || []).map(stat => ({
+        timestamp: stat.timestamp || new Date().toISOString(),
+        ip: stat.ip || 'unknown',
+        userAgent: stat.userAgent || 'unknown',
+        referer: stat.referer || '',
+        is_bot: !!stat.is_bot,
+      })),
       qrCode: item.qrCode || null,
       private: !!item.private,  // default to public (false) if absent
       title: item.title || null,
@@ -153,6 +161,7 @@ async function logAccessFile(short, accessInfo) {
     ip: accessInfo.ip || 'unknown',
     userAgent: accessInfo.userAgent || 'unknown',
     referer: accessInfo.referer || '',
+    is_bot: !!accessInfo.isBot,
   });
   await saveUrlsFile(shorts);
   return true;
@@ -179,6 +188,27 @@ async function deleteShortUrlFile(short) {
   return true;
 }
 
+async function getRecentVisitsFile(limit = 50) {
+  const shorts = await readUrlsFile();
+  const allVisits = [];
+  for (const item of shorts) {
+    for (const stat of (item.stats || [])) {
+      allVisits.push({
+        short: item.id,
+        original: item.original,
+        timestamp: stat.timestamp,
+        ip: stat.ip || 'unknown',
+        userAgent: stat.userAgent || '',
+        referer: stat.referer || '',
+        is_bot: !!stat.is_bot,
+      });
+    }
+  }
+  // Sort descending by timestamp (most recent first)
+  allVisits.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  return allVisits.slice(0, limit);
+}
+
 // Public API - delegates to Cosmos (MongoDB API) or file storage
 export async function readUrls() {
   if (useCosmos) {
@@ -200,7 +230,12 @@ export function generateShortCodeFn() {
 
 export async function findUrlByShort(short) {
   if (useCosmos) {
-    return cosmos.findUrlByShort(short);
+    const item = await cosmos.findUrlByShort(short);
+    item.stats.forEach(element => {
+      element.is_bot = isBotUserAgent(element.userAgent);
+    });
+    // console.log(item);
+    return item;
   }
   return findUrlByShortFile(short);
 }
@@ -233,8 +268,19 @@ export async function deleteShortUrl(short) {
   return deleteShortUrlFile(short);
 }
 
+export async function getRecentVisits(limit = 50) {
+  if (useCosmos) {
+    const stats = await cosmos.getRecentVisits(limit);
+    stats.forEach(element => {
+      element.is_bot = isBotUserAgent(element.userAgent);
+    });
+    return stats;
+  }
+  return getRecentVisitsFile(limit);
+}
+
 // Export validator for potential client or other use
-export { isValidCustomSlug };
+// export { isValidCustomSlug };
 
 // Helper to check if a URL entry has expired (by date or click count)
 // Exported for use in redirect and other places

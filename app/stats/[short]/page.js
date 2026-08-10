@@ -15,6 +15,9 @@ export default function StatsPage() {
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState('desc'); // default newest first for logs
 
+  // For QR download/copy feedback
+  const [copySuccess, setCopySuccess] = useState(false);
+
   useEffect(() => {
     if (!short) {
       setError('No short code provided');
@@ -65,6 +68,80 @@ export default function StatsPage() {
     return sortDirection === 'asc' ? ' ▲' : ' ▼';
   };
 
+  // Bot / Human badge (same visual language as list page)
+  const BotBadge = ({ isBot }) => (
+    isBot ? (
+      <span style={{
+        padding: '1px 6px',
+        borderRadius: '3px',
+        fontSize: '11px',
+        backgroundColor: '#fef3c7',
+        color: '#92400e',
+        border: '1px solid #fcd34d',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '3px'
+      }} title="Bot / Crawler">
+        🤖 Bot
+      </span>
+    ) : (
+      <span style={{
+        padding: '1px 6px',
+        borderRadius: '3px',
+        fontSize: '11px',
+        backgroundColor: '#dcfce7',
+        color: '#166534',
+        border: '1px solid #bbf7d0',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '3px'
+      }} title="Human visitor">
+        👤 Human
+      </span>
+    )
+  );
+
+  // Download QR as PNG (uses the data URL from server)
+  const handleDownloadQR = () => {
+    if (!data || !data.qrCode) return;
+
+    try {
+      const link = document.createElement('a');
+      link.href = data.qrCode;
+      link.download = `qr-${data.id || short}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      // Fallback: open in new tab
+      window.open(data.qrCode, '_blank');
+    }
+  };
+
+  // Copy short link to clipboard
+  const handleCopyShortLink = async () => {
+    if (!data) return;
+    const shortUrl = `${window.location.origin}/${data.id}`;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shortUrl);
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = shortUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 1800);
+    } catch (e) {
+      // Last resort
+      prompt('Copy this short link:', shortUrl);
+    }
+  };
+
   if (loading) {
     return <p className="metadata">Loading stats...</p>;
   }
@@ -83,7 +160,7 @@ export default function StatsPage() {
     return <p>No data.</p>;
   }
 
-  const { id, original, created, accessCount, stats, title, expiresAt, maxClicks } = data;
+  const { id, original, created, accessCount, stats, title, expiresAt, maxClicks, qrCode } = data;
 
   // Display title or original URL in the header
   const displayName = title || original;
@@ -114,6 +191,10 @@ export default function StatsPage() {
           valA = a.referer || '';
           valB = b.referer || '';
           break;
+        case 'visitor':
+          valA = a.is_bot ? 1 : 0;
+          valB = b.is_bot ? 1 : 0;
+          break;
         default:
           return 0;
       }
@@ -123,6 +204,8 @@ export default function StatsPage() {
       return 0;
     });
   }
+
+  const shortUrl = typeof window !== 'undefined' ? `${window.location.origin}/${id}` : `/${id}`;
 
   // Use similar style to homepage stats: stat cards for properties
   return (
@@ -185,6 +268,66 @@ export default function StatsPage() {
         </div>
       </div>
 
+      {/* ===================================================== */}
+      {/* 3. QR CODE DISPLAY + ACTIONS IN URL DETAIL VIEW       */}
+      {/* Always encodes the SHORTENED URL (not original)       */}
+      {/* ===================================================== */}
+      <div style={{ marginBottom: '32px' }}>
+        <h3>QR Code</h3>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '12px',
+          padding: '16px',
+          border: '1px solid var(--color-border)',
+          background: 'var(--color-bg-primary)',
+          borderRadius: '4px',
+          maxWidth: '420px'
+        }}>
+          {qrCode ? (
+            <>
+              <div style={{ textAlign: 'center' }}>
+                <img 
+                  src={qrCode} 
+                  alt={`QR code for ${shortUrl}`} 
+                  style={{ 
+                    maxWidth: '100%', 
+                    width: '280px', 
+                    height: 'auto',
+                    border: '1px solid #ddd',
+                    background: '#fff',
+                    padding: '8px'
+                  }} 
+                />
+              </div>
+              <div style={{ fontSize: '12px', color: '#666', textAlign: 'center' }}>
+                This QR encodes the shortened URL (scans go through redirect for analytics).
+              </div>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={handleDownloadQR}
+                  className="secondary"
+                  style={{ padding: '6px 14px', fontSize: '13px' }}
+                >
+                  ⬇ Download QR (PNG)
+                </button>
+                <button 
+                  onClick={handleCopyShortLink}
+                  className="secondary"
+                  style={{ padding: '6px 14px', fontSize: '13px' }}
+                >
+                  {copySuccess ? '✓ Copied!' : '📋 Copy Short Link'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="metadata">
+              No QR code available for this link (regenerate by re-creating the short URL if needed).
+            </div>
+          )}
+        </div>
+      </div>
+
       <h3>Access Log</h3>
 
       {accessCount === 0 && (
@@ -230,6 +373,13 @@ export default function StatsPage() {
               >
                 Referer{getSortIndicator('referer')}
               </th>
+              <th 
+                onClick={() => handleSort('visitor')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort (alternates asc/desc)"
+              >
+                Visitor Type{getSortIndicator('visitor')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -245,6 +395,9 @@ export default function StatsPage() {
                   ) : (
                     <span className="metadata">(none)</span>
                   )}
+                </td>
+                <td>
+                  <BotBadge isBot={!!stat.is_bot} />
                 </td>
               </tr>
             ))}

@@ -12,6 +12,11 @@ export default function ListPage() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
 
+  // Visits (last 50) state
+  const [visits, setVisits] = useState([]);
+  const [visitsLoading, setVisitsLoading] = useState(true);
+  const [visitsError, setVisitsError] = useState('');
+
   // Sorting state: column key and direction ('asc' | 'desc')
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState('asc');
@@ -87,8 +92,33 @@ export default function ListPage() {
     }
   };
 
+  // Fetch last 50 visits (strict LIMIT 50, chrono desc)
+  const fetchVisits = async () => {
+    setVisitsLoading(true);
+    setVisitsError('');
+    try {
+      const response = await fetch('/api/visits');
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          window.location.href = '/login';
+          return;
+        }
+        setVisitsError(data.error || 'Failed to load recent visits');
+      } else {
+        setVisits(data.visits || []);
+      }
+    } catch (err) {
+      setVisitsError('Failed to fetch recent visits.');
+    } finally {
+      setVisitsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchUrls();
+    fetchVisits();
   }, []);
 
   // Handle column header click for sorting (alternating order)
@@ -215,6 +245,7 @@ export default function ListPage() {
   const clearCacheAndRefresh = () => {
     localStorage.removeItem(CACHE_KEY);
     fetchUrls(true);
+    fetchVisits();
   };
 
   const handleToggleVisibility = async (item) => {
@@ -294,6 +325,39 @@ export default function ListPage() {
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
         <path d="M7 11V7a5 5 0 0 1 9.9-1" />
       </svg>
+    )
+  );
+
+  // Bot / Human badge renderer (used in visits list and can be reused)
+  const BotBadge = ({ isBot }) => (
+    isBot ? (
+      <span style={{
+        padding: '1px 6px',
+        borderRadius: '3px',
+        fontSize: '11px',
+        backgroundColor: '#fef3c7',
+        color: '#92400e',
+        border: '1px solid #fcd34d',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '3px'
+      }} title="Bot / Crawler">
+        🤖 Bot
+      </span>
+    ) : (
+      <span style={{
+        padding: '1px 6px',
+        borderRadius: '3px',
+        fontSize: '11px',
+        backgroundColor: '#dcfce7',
+        color: '#166534',
+        border: '1px solid #bbf7d0',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '3px'
+      }} title="Human visitor">
+        👤 Human
+      </span>
     )
   );
 
@@ -401,6 +465,31 @@ export default function ListPage() {
         return '';
     }
   };
+
+  // Render a visit row (for last 50 visits table)
+  const renderVisitRow = (visit, idx) => (
+    <tr key={`${visit.short}-${visit.timestamp}-${idx}`}>
+      <td className="metadata">{new Date(visit.timestamp).toLocaleString()}</td>
+      <td><code className="short-url"><a href={`/stats/${visit.short}`}>{visit.short}</a></code></td>
+      <td style={{ wordBreak: 'break-all', fontSize: '12px' }}>
+        <a href={visit.original} target="_blank" rel="noopener noreferrer">{visit.original}</a>
+      </td>
+      <td><code style={{ fontSize: '11px' }}>{visit.ip}</code></td>
+      <td style={{ fontSize: '11px', wordBreak: 'break-all', maxWidth: '220px' }}>
+        {visit.userAgent || <span className="metadata">(none)</span>}
+      </td>
+      <td style={{ fontSize: '11px', wordBreak: 'break-all' }}>
+        {visit.referer ? (
+          <a href={visit.referer} target="_blank" rel="noopener noreferrer">{visit.referer}</a>
+        ) : (
+          <span className="metadata">(none)</span>
+        )}
+      </td>
+      <td>
+        <BotBadge isBot={!!visit.is_bot} />
+      </td>
+    </tr>
+  );
 
   return (
     <>
@@ -619,6 +708,52 @@ export default function ListPage() {
       <div className="metadata" style={{ marginTop: '16px' }}>
         Total entries in cache: {items.length}
         {searchTerm && ` • ${filteredItems.length} match${filteredItems.length === 1 ? '' : 'es'} for search`}
+      </div>
+
+      {/* ===================================================== */}
+      {/* 1. LAST 50 VISITED URLs - Dedicated Audit Section     */}
+      {/* Strict LIMIT 50, chrono descending, bot detection     */}
+      {/* ===================================================== */}
+      <div style={{ marginTop: '32px', borderTop: '2px solid var(--color-border)', paddingTop: '16px' }}>
+        <h2>Last 50 Visited URLs</h2>
+        <p className="metadata" style={{ marginBottom: '12px' }}>
+          Strictly the most recent 50 visit records. 
+          Includes bot/crawler detection for traffic analysis and oversight. 
+          Refreshes with the list above.
+        </p>
+
+        {visitsError && (
+          <div className="error">{visitsError}</div>
+        )}
+
+        {visitsLoading && !visitsError && (
+          <p className="metadata">Loading recent visits...</p>
+        )}
+
+        {!visitsLoading && visits.length === 0 && !visitsError && (
+          <p className="metadata">No visits recorded yet.</p>
+        )}
+
+        {!visitsLoading && visits.length > 0 && (
+          <>
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Short Code</th>
+                  <th>Original URL</th>
+                  <th>IP</th>
+                  <th>User-Agent</th>
+                  <th>Referer</th>
+                  <th>Visitor Type</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visits.map((visit, idx) => renderVisitRow(visit, idx))}
+              </tbody>
+            </table>
+          </>
+        )}
       </div>
     </>
   )

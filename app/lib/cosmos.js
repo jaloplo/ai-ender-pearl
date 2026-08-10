@@ -337,6 +337,39 @@ export async function deleteShortUrl(short) {
   }
 }
 
+export async function getRecentVisits(limit = 50) {
+  try {
+    const statsColl = await getStatsCollection();
+    const coll = await getUrlsCollection();
+
+    // Fetch recent stats (sorted desc by timestamp), limit to requested
+    const recentStats = await statsColl
+      .find({})
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .toArray();
+
+    // Build map of short -> original for enrichment
+    const shortsDocs = await coll.find({}).toArray();
+    const originalByShort = {};
+    for (const d of shortsDocs) {
+      if (d.id) originalByShort[d.id] = d.original || '';
+    }
+
+    return recentStats.map((s) => ({
+      short: s.short,
+      original: originalByShort[s.short] || '',
+      timestamp: s.timestamp,
+      ip: s.ip || 'unknown',
+      userAgent: s.userAgent || '',
+      referer: s.referer || '',
+    }));
+  } catch (error) {
+    console.error('Cosmos MongoDB getRecentVisits error:', error);
+    return [];
+  }
+}
+
 function generateShortCode() {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
