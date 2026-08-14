@@ -16,8 +16,7 @@ export async function GET(request) {
     const items = shorts.map(item => ({
       ...item,
       shortUrl: `${origin}/${item.id}`,
-      accessCount: (item.stats || []).length,
-      qrCode: item.qrCode || null,
+      stats: item.stats || [],
       private: !!item.private,
       expiresAt: item.expiresAt || null,
       maxClicks: item.maxClicks != null ? item.maxClicks : null,

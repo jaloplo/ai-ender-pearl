@@ -226,7 +226,14 @@ async function regenerateQrCodeFile(short) {
 // Public API - delegates to Cosmos (MongoDB API) or file storage
 export async function readUrls() {
   if (useCosmos) {
-    return cosmos.readUrls();
+    const urls = await cosmos.readUrls();
+    for(const url of urls) {
+      url.stats.forEach(element => {
+        element.is_bot = isBotUserAgent(element.userAgent);
+      });
+    }
+
+    return urls;
   }
   return readUrlsFile();
 }

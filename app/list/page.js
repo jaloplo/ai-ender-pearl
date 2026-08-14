@@ -24,7 +24,7 @@ export default function ListPage() {
   // Column visibility: all existing columns selectable
   const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState([
-    'shortCode', 'shortenedUrl', 'originalUrl', 'title', 'created', 'visibility', 'accesses', 'expires', 'maxClicks', 'decay', 'actions'
+    'shortCode', 'originalUrl', 'created', 'visibility', 'accesses', 'actions'
   ]);
 
   const CACHE_KEY = 'urlShortenerCache';
@@ -189,8 +189,8 @@ export default function ListPage() {
           valB = b.private ? 1 : 0;
           break;
         case 'accesses':
-          valA = a.accessCount ?? 0;
-          valB = b.accessCount ?? 0;
+          valA = a.stats.filter(s => s.is_bot === false).length ?? 0;
+          valB = b.stats.filter(s => s.is_bot === false).length ?? 0;
           break;
         case 'expires':
           valA = a.expiresAt ? new Date(a.expiresAt).getTime() : 0;
@@ -400,7 +400,11 @@ export default function ListPage() {
           </span>
         );
       case 'accesses':
-        return item.accessCount ?? 0;
+        return <span className="metadata">{
+          item.stats 
+            ? `${item.stats.filter(i => i.is_bot === false).length} (${item.stats.filter(i => i.is_bot === true).length})` 
+            : 0}
+          </span>;
       case 'expires':
         if (item.expiresAt) {
           const isPast = new Date(item.expiresAt) < new Date();
@@ -414,7 +418,7 @@ export default function ListPage() {
         return <span className="metadata">(none)</span>;
       case 'maxClicks':
         if (item.maxClicks != null) {
-          const current = item.accessCount ?? 0;
+          const current = item.stats.length ?? 0;
           const reached = current >= Number(item.maxClicks);
           return (
             <span style={{ fontSize: '12px', color: reached ? '#991b1b' : 'inherit' }}>
