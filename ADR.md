@@ -363,3 +363,9 @@
 * **Context:** The homepage's "Recent Public Shortened URLs" items needed a clearer left-to-right reading order, stronger metadata hierarchy, QR visibility, and explicit actions for opening or copying each shortened URL.
 * **Decision:** Updated `app/page.js` to render each recent item as a horizontal two-column layout: QR code first, then optional bold title, source URL/date metadata, accent-colored shortened URL link, and Open/Copy actions. Extended `app/api/public-stats/route.js` to expose stored `qrCode` values and added responsive styling in `app/globals.css`, stacking columns on narrow screens.
 * **Consequences:** Recent links are easier to scan and act upon, with the short URL visibly emphasized and safely opened in a new tab. Copy remains available through the existing clipboard fallback. Items without QR data remain backward compatible through a clear placeholder, and mobile users receive a single-column fallback.
+
+## 35. Display Shortening Results Beneath Their Respective Forms
+* **Date:** 2026-08-14
+* **Context:** The homepage used one shared result state and rendered the shortening result after both forms, making it unclear whether a result came from Standard Link or Decay Link.
+* **Decision:** Updated `app/page.js` with separate `standardResult` and `decayResult` state, separate form-scoped error state, and a shared result renderer. Each result is now rendered directly below its originating form: Standard Link below the standard form and Decay Link below the decay form.
+* **Consequences:** Users can immediately associate each shortened URL with the correct form. Existing result metadata, QR rendering, validation, loading behavior, and backend requests remain unchanged. Errors are also scoped to the form that produced them.

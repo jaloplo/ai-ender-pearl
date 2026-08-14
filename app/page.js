@@ -9,8 +9,10 @@ export default function ShortenPage() {
   const [customSlug, setCustomSlug] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
   const [maxClicks, setMaxClicks] = useState('');
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+  const [standardResult, setStandardResult] = useState(null);
+  const [decayResult, setDecayResult] = useState(null);
+  const [standardError, setStandardError] = useState('');
+  const [decayError, setDecayError] = useState('');
   const [standardLoading, setStandardLoading] = useState(false);
   const [decayLoading, setDecayLoading] = useState(false);
   const [stats, setStats] = useState({ count: 0, recent: [], uniqueDomains: 0, thisMonth: 0, totalClicks: 0 });
@@ -34,12 +36,13 @@ export default function ShortenPage() {
   }, []);
 
   const handleSubmit = async (e, urlValue, decay = false) => {
-    e.preventDefault(); setError(''); setResult(null);
-    if (!urlValue?.trim()) { setError('Please enter a URL'); return; }
+    e.preventDefault();
+    if (decay) { setDecayError(''); setDecayResult(null); } else { setStandardError(''); setStandardResult(null); }
+    if (!urlValue?.trim()) { (decay ? setDecayError : setStandardError)('Please enter a URL'); return; }
     const slug = customSlug.trim();
-    if (isAuthenticated && slug && !decay && (!/^[a-zA-Z0-9_-]{1,64}$/.test(slug) || ['api','login','list','stats','shorten','_next','favicon.ico','icon'].includes(slug.toLowerCase()))) { setError('Please enter a valid, available custom alias.'); return; }
-    if (isAuthenticated && expiresAt && !decay && (isNaN(new Date(expiresAt).getTime()) || new Date(expiresAt) <= new Date())) { setError('Expiration date/time must be a valid future date and time.'); return; }
-    if (isAuthenticated && maxClicks && !decay && (!Number.isInteger(Number(maxClicks)) || Number(maxClicks) < 1)) { setError('Maximum clicks must be a positive integer.'); return; }
+    if (isAuthenticated && slug && !decay && (!/^[a-zA-Z0-9_-]{1,64}$/.test(slug) || ['api','login','list','stats','shorten','_next','favicon.ico','icon'].includes(slug.toLowerCase()))) { setStandardError('Please enter a valid, available custom alias.'); return; }
+    if (isAuthenticated && expiresAt && !decay && (isNaN(new Date(expiresAt).getTime()) || new Date(expiresAt) <= new Date())) { setStandardError('Expiration date/time must be a valid future date and time.'); return; }
+    if (isAuthenticated && maxClicks && !decay && (!Number.isInteger(Number(maxClicks)) || Number(maxClicks) < 1)) { setStandardError('Maximum clicks must be a positive integer.'); return; }
     decay ? setDecayLoading(true) : setStandardLoading(true);
     try {
       const payload = { url: urlValue.trim() };
@@ -47,21 +50,22 @@ export default function ShortenPage() {
       else if (isAuthenticated) { payload.private = isPrivate; if (slug) payload.customSlug = slug; if (expiresAt) payload.expiresAt = expiresAt; if (maxClicks) payload.maxClicks = Number(maxClicks); }
       const response = await fetch('/api/shorten', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await response.json();
-      if (!response.ok) setError(data.error || 'Failed to shorten URL');
-      else { setResult(data); decay ? setDecayUrl('') : setStandardUrl(''); setIsPrivate(false); setCustomSlug(''); setExpiresAt(''); setMaxClicks(''); fetchStats(); }
-    } catch (_) { setError('Network error. Please try again.'); }
+      if (!response.ok) (decay ? setDecayError : setStandardError)(data.error || 'Failed to shorten URL');
+      else { decay ? setDecayResult(data) : setStandardResult(data); decay ? setDecayUrl('') : setStandardUrl(''); setIsPrivate(false); setCustomSlug(''); setExpiresAt(''); setMaxClicks(''); fetchStats(); }
+    } catch (_) { (decay ? setDecayError : setStandardError)('Network error. Please try again.'); }
     finally { decay ? setDecayLoading(false) : setStandardLoading(false); }
   };
 
   const anyLoading = standardLoading || decayLoading;
   const formatTimestamp = (value) => { try { return value ? new Date(value).toLocaleString() : ''; } catch (_) { return value; } };
-  const formatExpiration = (value) => { try { return value ? new Date(value).toLocaleString() : ''; } catch (_) { return value; } };
   const copyToClipboard = async (text, e) => {
     e?.preventDefault();
     try { await navigator.clipboard.writeText(text); }
     catch (_) { const area = document.createElement('textarea'); area.value = text; document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove(); }
     if (e?.currentTarget) { const button = e.currentTarget; const old = button.textContent; button.textContent = 'Copied!'; setTimeout(() => { button.textContent = old; }, 1200); }
   };
+
+  const renderResult = (result) => result && <div className="result"><strong>Shortened URL</strong><br /><a href={result.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">{result.shortUrl}</a><br /><br /><strong>Original:</strong> {result.original}<br />{result.title && <><strong>Title:</strong> {result.title}<br /></>}<strong>Code:</strong> {result.id}<br /><strong>Visibility:</strong> {result.private ? 'Private' : 'Public'}<br />{result.decay && <><strong>Type:</strong> Decay (Burn After Reading)<br /></>}<span className="metadata">Created: {formatTimestamp(result.created)}</span>{result.qrCode && <div className="result-qr"><strong>QR Code</strong><img src={result.qrCode} alt={`QR code for ${result.shortUrl}`} /></div>}</div>;
 
   return <div className="home-centered">
     <div className="home-split">
@@ -86,6 +90,8 @@ export default function ShortenPage() {
           </div>
           <button type="submit" disabled={anyLoading} className="prominent-button">{standardLoading ? 'Shortening...' : 'Shorten URL'}</button>
         </form>
+        {standardError && <div className="error">{standardError}</div>}
+        {renderResult(standardResult)}
       </div>
     </div>
 
@@ -95,9 +101,8 @@ export default function ShortenPage() {
       <label htmlFor="url-decay">Confidential URL</label><input type="text" id="url-decay" value={decayUrl} onChange={(e) => setDecayUrl(e.target.value)} placeholder="Paste your confidential URL here..." disabled={anyLoading} className="prominent-input" />
       <button type="submit" disabled={anyLoading} className="prominent-button decay-cta">{decayLoading ? 'Creating Self-Destructing Link...' : 'Create Self-Destructing Link'}</button>
     </form>
-
-    {error && <div className="error">{error}</div>}
-    {result && <div className="result"><strong>Shortened URL</strong><br /><a href={result.shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">{result.shortUrl}</a><br /><br /><strong>Original:</strong> {result.original}<br />{result.title && <><strong>Title:</strong> {result.title}<br /></>}<strong>Code:</strong> {result.id}<br /><strong>Visibility:</strong> {result.private ? 'Private' : 'Public'}<br />{result.decay && <><strong>Type:</strong> Decay (Burn After Reading)<br /></>}<span className="metadata">Created: {formatTimestamp(result.created)}</span>{result.qrCode && <div className="result-qr"><strong>QR Code</strong><img src={result.qrCode} alt={`QR code for ${result.shortUrl}`} /></div>}</div>}
+    {decayError && <div className="error">{decayError}</div>}
+    {renderResult(decayResult)}
 
     <div className="stats-row stats-teaser"><div className="stats-content"><strong>Community Stats (Public URLs only)</strong><div className="stats-cards"><div className="stat-card"><div className="stat-value">{stats.count}</div><div className="stat-label">Total Links Created</div></div><div className="stat-card"><div className="stat-value">{stats.uniqueDomains}</div><div className="stat-label">Unique Domains</div></div><div className="stat-card"><div className="stat-value">{stats.thisMonth}</div><div className="stat-label">Created This Month</div></div><div className="stat-card"><div className="stat-value">{stats.totalClicks}</div><div className="stat-label">Total Clicks (All URLs)</div></div></div></div></div>
 
