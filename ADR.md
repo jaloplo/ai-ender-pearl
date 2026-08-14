@@ -357,3 +357,9 @@
 * **Decision:** Added POST handler to app/api/stats/[short]/route.js that calls new regenerateQrCode() helpers in app/lib/urls.js (file) and app/lib/cosmos.js (Mongo). Updated app/stats/[short]/page.js with a "🔄 Regenerate QR Code" button (secondary style), loading state, success feedback, and immediate UI refresh via setData(). Reuses existing generateQrCodeWithLogo, security (middleware + origin), and styling.
 * **Consequences:** Users (authenticated) can now refresh the QR image on demand from the stats view (e.g. after logo updates or for fresh copies). Instant client update, no reload. Full parity between file and Cosmos storage. Preserves all prior features, retro styling, and security. Minor addition to API surface and client state. Added reasoning.md documenting the implementation.
 
+
+## 34. Recent Public Shortened URL Two-Column Layout
+* **Date:** 2026-08-14
+* **Context:** The homepage's "Recent Public Shortened URLs" items needed a clearer left-to-right reading order, stronger metadata hierarchy, QR visibility, and explicit actions for opening or copying each shortened URL.
+* **Decision:** Updated `app/page.js` to render each recent item as a horizontal two-column layout: QR code first, then optional bold title, source URL/date metadata, accent-colored shortened URL link, and Open/Copy actions. Extended `app/api/public-stats/route.js` to expose stored `qrCode` values and added responsive styling in `app/globals.css`, stacking columns on narrow screens.
+* **Consequences:** Recent links are easier to scan and act upon, with the short URL visibly emphasized and safely opened in a new tab. Copy remains available through the existing clipboard fallback. Items without QR data remain backward compatible through a clear placeholder, and mobile users receive a single-column fallback.
