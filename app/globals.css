@@ -1950,3 +1950,13 @@ th[style*="cursor: pointer"]:hover {
 
 /* Correct the details table label column width. */
 .stats-details-table th { width: 30%; }
+
+/* Horizontal bot-click chart */
+.bot-chart { margin-top: 14px; overflow-x: auto; }
+.bot-chart-scale { display: flex; justify-content: space-between; margin-left: 130px; color: var(--color-text-secondary); font-size: 11px; }
+.bot-chart-row { display: grid; grid-template-columns: 120px minmax(220px, 1fr); gap: 10px; align-items: center; margin: 8px 0; min-width: 360px; }
+.bot-chart-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.bot-chart-track { position: relative; height: 22px; background: repeating-linear-gradient(to right, transparent 0, transparent calc(50% - 1px), var(--color-border-subtle) 50%, transparent calc(50% + 1px)), var(--color-bg-primary); border: 1px solid var(--color-border-subtle); }
+.bot-chart-track b { display: block; height: 100%; min-width: 2px; background: #d97706; }
+.bot-chart-track span { position: absolute; right: 6px; top: 1px; color: var(--color-text-primary); font-size: 12px; font-weight: 700; }
+@media (max-width: 560px) { .bot-chart-scale { margin-left: 100px; }.bot-chart-row { grid-template-columns: 90px minmax(220px, 1fr); } }

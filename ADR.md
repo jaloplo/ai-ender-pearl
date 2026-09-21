@@ -405,3 +405,9 @@
 * **Context:** The `/stats/[short]` page needed a clearer information hierarchy: title first, link metadata beside QR actions, analytics next, and the access log last. The page navigator should follow the established list URL navigation pattern.
 * **Decision:** Updated `app/stats/[short]/page.js` to render the requested `{title || original} data content` heading, a responsive left details table/right QR row, `AnalyticsDashboard`, and then the paginated Access Log. Added `app/components/PageNavigator.js` as the shared navigation pattern and focused responsive stats styles in `app/globals.css`.
 * **Consequences:** Link metadata is scannable in one table, QR actions remain grouped beside it, and the requested page order is explicit. Desktop gets a two-column layout and mobile stacks the panels. Existing analytics, QR, sorting, authentication, and access-log behavior remain intact.
+
+## 42. Horizontal Clicks-per-Bot Chart
+* **Date:** 2026-09-21
+* **Context:** The `/list` and `/stats/[short]` analytics dashboards needed a horizontal bar chart showing total clicks per identified bot, constrained to the selected time range.
+* **Decision:** Extended `app/lib/analytics.js` to aggregate bot User-Agent names within the existing range-filtered visit set and exposed the ranking through the analytics API. Added a reusable horizontal chart to `app/components/AnalyticsDashboard.js`; since the dashboard is mounted on both pages, both surfaces receive the feature. Added responsive chart styling to `app/globals.css`.
+* **Consequences:** Bot click totals now update whenever users select week, month, quarter, or all-time. The chart is dependency-free and responsive, while unidentified bot traffic is grouped under a safe fallback label. No storage schema or API endpoint changes were required beyond the additive response field.

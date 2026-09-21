@@ -145,7 +145,7 @@ export default function StatsPage() {
   ];
 
   return <>
-    <h2>{displayName} data content</h2>
+    <h2>{displayName}</h2>
 
     <div className="stats-detail-row">
       <section className="stats-details-panel">
