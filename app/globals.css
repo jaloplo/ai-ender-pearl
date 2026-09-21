@@ -1910,3 +1910,11 @@ th[style*="cursor: pointer"]:hover {
 .heatmap-wrap { overflow-x: auto; }.heatmap-hours { margin-left: 40px; min-width: 480px; display: grid; grid-template-columns: repeat(24, 1fr); font-size: 10px; color: var(--color-text-secondary); text-align: center; }.heatmap-row { display: grid; grid-template-columns: 36px repeat(24, 1fr); min-width: 520px; gap: 2px; margin-top: 2px; }.heatmap-day { font-size: 11px; align-self: center; }.heat-cell { aspect-ratio: 1; min-height: 13px; border: 1px solid rgba(0,0,0,.04); }
 .analytics-footer { margin-top: 12px; }
 @media (max-width: 700px) { .analytics-grid { grid-template-columns: 1fr; }.analytics-wide { grid-column: span 1; }.pie-layout { justify-content: center; }.analytics-dashboard { margin-top: 28px; } }
+
+/* Keep the protected visit audit concise: the paged replacement owns this section. */
+.list-layout > div:last-child:not(.analytics-dashboard) { display: none; }
+.recent-visits-pager { margin-top: 32px; border-top: 2px solid var(--color-border); padding-top: 16px; }
+.recent-visits-controls { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+
+/* The original audit block in the page is retained for compatibility but replaced by the paged layout module. */
+.list-layout > div[style*="border-top"] { display: none; }

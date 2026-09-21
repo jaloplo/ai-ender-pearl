@@ -381,3 +381,15 @@
 * **Context:** The `/list` page needed to be fully presented in English. The page itself was mostly English, but the nested analytics dashboard still exposed Spanish labels, messages, chart legends, tooltips, and accessibility text.
 * **Decision:** Translated all user-facing strings in `app/components/AnalyticsDashboard.js` and reviewed/normalized visible copy in `app/list/page.js`. Preserved all existing list, audit, analytics, authentication, caching, sorting, filtering, and pagination behavior.
 * **Consequences:** The protected `/list` experience is now consistent for English-speaking users, including analytics loading, empty, error, chart, range, and screen-reader text. No backend or data changes were required.
+
+## 38. List Analytics Range and Chart Refinements
+* **Date:** 2026-09-21
+* **Context:** The `/list` analytics dashboard needed a simpler presentation and time-aware visualizations: remove Daily Accumulation, show reference lines on Clicks per Day, aggregate 3-month-or-longer data weekly, and ensure the heatmap follows the selected range.
+* **Decision:** Updated `app/components/AnalyticsDashboard.js` to remove the Daily Accumulation card and render horizontal scale lines based on the tallest Clicks per Day bar. Updated `app/lib/analytics.js` so quarter and all-time results use Monday-based weekly buckets while week/month remain daily; the existing range filter feeds the heatmap, browser, and source aggregations.
+* **Consequences:** The dashboard is less redundant, easier to read, and remains responsive to selected time ranges. Weekly aggregation reduces visual noise for long periods. No API contract, persistence, or dependency changes were required.
+
+## 39. Paginated Recent Visit Audit on `/list`
+* **Date:** 2026-09-21
+* **Context:** The Last 50 Visited URLs audit table made `/list` excessively long because all records were rendered at once.
+* **Decision:** Added `app/components/RecentVisitsPager.js`, which consumes the existing server-limited `/api/visits` response and renders ten records per page with first, previous, next, and last controls. Mounted it in `app/list/layout.js` and suppressed the former unpaged audit block to prevent duplicate content.
+* **Consequences:** The audit remains capped at the latest 50 records while the initial view is limited to ten rows. Users can navigate the remaining records without a backend or data-model change.
