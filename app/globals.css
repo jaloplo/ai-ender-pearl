@@ -1918,3 +1918,35 @@ th[style*="cursor: pointer"]:hover {
 
 /* The original audit block in the page is retained for compatibility but replaced by the paged layout module. */
 .list-layout > div[style*="border-top"] { display: none; }
+
+/* Stats page: analytics occupies the slot between URL details/QR and Access Log. */
+.stats-page-analytics { margin: 24px 0 32px; }
+.qr-stats-panel { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--color-border-subtle); background: var(--color-bg-primary); border-radius: 4px; max-width: 420px; }
+.qr-stats-image { display: block; width: 280px; max-width: 100%; height: auto; align-self: center; border: 1px solid #ddd; background: #fff; padding: 8px; }
+.qr-stats-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.access-log-controls { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 24px; }
+.visitor-badge { display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+.visitor-badge.human { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.visitor-badge.bot { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+@media (max-width: 700px) { .qr-stats-image { width: 240px; } .access-log-controls { justify-content: flex-start; } }
+
+
+/* Stats detail page: title, link information/QR row, analytics, then access log. */
+.stats-detail-row { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, .65fr); gap: 24px; align-items: start; margin: 24px 0 32px; }
+.stats-details-panel, .stats-qr-section { min-width: 0; }
+.stats-details-panel h3, .stats-qr-section h3 { margin-top: 0; }
+.stats-details-table { margin-bottom: 0; }
+.stats-details-table th { width:  thirty%; text-transform: none; font-size: 13px; }
+.stats-details-table td { word-break: break-word; }
+.stats-qr-section .qr-stats-panel { max-width: none; }
+.access-log-section { margin-top: 32px; }
+@media (max-width: 760px) {
+  .stats-detail-row { grid-template-columns: 1fr; gap: 28px; }
+}
+
+
+.page-navigator { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 24px; }
+@media (max-width: 700px) { .page-navigator { justify-content: flex-start; } }
+
+/* Correct the details table label column width. */
+.stats-details-table th { width: 30%; }

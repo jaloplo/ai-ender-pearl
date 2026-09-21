@@ -393,3 +393,15 @@
 * **Context:** The Last 50 Visited URLs audit table made `/list` excessively long because all records were rendered at once.
 * **Decision:** Added `app/components/RecentVisitsPager.js`, which consumes the existing server-limited `/api/visits` response and renders ten records per page with first, previous, next, and last controls. Mounted it in `app/list/layout.js` and suppressed the former unpaged audit block to prevent duplicate content.
 * **Consequences:** The audit remains capped at the latest 50 records while the initial view is limited to ten rows. Users can navigate the remaining records without a backend or data-model change.
+
+## 40. Stats Page Analytics Placement and Paginated Recent Access Log
+* **Date:** 2026-09-21
+* **Context:** The `/stats/[short]` page needed the complete analytics section positioned between the QR Code and Access Log components. The Access Log also needed ten records per page and newest visits first.
+* **Decision:** Removed the automatic analytics mount from `app/stats/[short]/layout.js` and rendered `AnalyticsDashboard` explicitly in `app/stats/[short]/page.js` after QR Code and before Access Log. Added client-side pagination with a fixed page size of 10, navigation controls, page range metadata, and timestamp-descending initial sorting. Added focused styles in `app/globals.css` for the QR panel, visitor badges, and controls.
+* **Consequences:** Stats users see analytics in the requested order and can browse long access logs without an excessively tall page. The existing analytics API, QR behavior, authentication, storage, and sort options remain unchanged; pagination operates on the already-fetched stats data.
+
+## 41. Stats Link Detail Two-Column Layout
+* **Date:** 2026-09-21
+* **Context:** The `/stats/[short]` page needed a clearer information hierarchy: title first, link metadata beside QR actions, analytics next, and the access log last. The page navigator should follow the established list URL navigation pattern.
+* **Decision:** Updated `app/stats/[short]/page.js` to render the requested `{title || original} data content` heading, a responsive left details table/right QR row, `AnalyticsDashboard`, and then the paginated Access Log. Added `app/components/PageNavigator.js` as the shared navigation pattern and focused responsive stats styles in `app/globals.css`.
+* **Consequences:** Link metadata is scannable in one table, QR actions remain grouped beside it, and the requested page order is explicit. Desktop gets a two-column layout and mobile stacks the panels. Existing analytics, QR, sorting, authentication, and access-log behavior remain intact.
