@@ -411,3 +411,15 @@
 * **Context:** The `/list` and `/stats/[short]` analytics dashboards needed a horizontal bar chart showing total clicks per identified bot, constrained to the selected time range.
 * **Decision:** Extended `app/lib/analytics.js` to aggregate bot User-Agent names within the existing range-filtered visit set and exposed the ranking through the analytics API. Added a reusable horizontal chart to `app/components/AnalyticsDashboard.js`; since the dashboard is mounted on both pages, both surfaces receive the feature. Added responsive chart styling to `app/globals.css`.
 * **Consequences:** Bot click totals now update whenever users select week, month, quarter, or all-time. The chart is dependency-free and responsive, while unidentified bot traffic is grouped under a safe fallback label. No storage schema or API endpoint changes were required beyond the additive response field.
+
+## 43. Stats Link Details, Title Refresh, and Shared H2 Styling
+* **Date:** 2026-09-21
+* **Context:** The stats view needed a clear Link Details grouping, a way to reread the original page title, and consistent H2 presentation across protected list and stats pages matching Analytics.
+* **Decision:** Added the `Link Details` H2 and title-refresh action to `/stats/[short]`; introduced a best-effort title fetch utility and protected title update endpoint with file/Cosmos persistence; added shared H2 CSS rules for list/stats sections.
+* **Consequences:** Link metadata and QR content are more clearly grouped, titles can be updated without recreating links, and section hierarchy is consistent. Title fetching remains best-effort and may fail for inaccessible/non-HTML pages.
+
+## 44. Correct Visit Classification, Bot Aggregation, and Shared Pagination
+* **Date:** 2026-09-21
+* **Context:** The `/list` and `/stats/[short]` pages showed inconsistent access totals, human/bot distinctions, bot analytics, and page navigator styling. Legacy records can omit the persisted bot flag.
+* **Decision:** Normalized `is_bot` and legacy `isBot` values at the list and stats API boundaries, treated missing classification as human, and exposed explicit human/bot counts for link statistics. Updated `app/lib/analytics.js` so range-filtered bot rankings count only explicitly classified bot visits. Standardized list, recent-visit, and stats access-log pagination around the same navigator structure and CSS treatment.
+* **Consequences:** Accesses are now consistently displayed as `human (bot)`, Total Clicks per Bot is range-correct and excludes human visits, and pagination has one shared visual language. Existing data remains backward compatible without migration; unidentified legacy visits intentionally remain human.

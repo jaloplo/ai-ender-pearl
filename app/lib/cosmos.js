@@ -416,3 +416,17 @@ export function isUrlExpired(entry) {
   }
   return false;
 }
+
+
+// Update only the stored page title after a manual refresh from the stats view.
+export async function updateUrlTitle(short, title) {
+  try {
+    const coll = await getUrlsCollection();
+    const result = await coll.updateOne({ id: short }, { $set: { title: title || null } });
+    if (result.matchedCount === 0) return null;
+    return await findUrlByShort(short);
+  } catch (error) {
+    console.error('Cosmos MongoDB updateUrlTitle error:', error);
+    return null;
+  }
+}

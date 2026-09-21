@@ -3,29 +3,13 @@ import { readUrls } from '@/app/lib/urls';
 import { isAllowedOrigin, createForbiddenResponse } from '@/app/lib/security';
 
 export async function GET(request) {
-  // Security: only allow same-domain calls
-  if (!isAllowedOrigin(request)) {
-    return createForbiddenResponse();
-  }
-
+  if (!isAllowedOrigin(request)) return createForbiddenResponse();
   try {
-    const shorts = await readUrls();
-    
     const origin = request.nextUrl.origin;
-    
-    const items = shorts.map(item => ({
-      ...item,
-      shortUrl: `${origin}/${item.id}`,
-      stats: item.stats || [],
-      private: !!item.private,
-      expiresAt: item.expiresAt || null,
-      maxClicks: item.maxClicks != null ? item.maxClicks : null,
-      decay: !!item.decay,
+    const items = (await readUrls()).map(item => ({
+      ...item, shortUrl: `${origin}/${item.id}`, stats: (item.stats || []).map(stat => ({ ...stat, is_bot: stat.is_bot === true || stat.isBot === true })),
+      private: !!item.private, expiresAt: item.expiresAt || null, maxClicks: item.maxClicks != null ? item.maxClicks : null, decay: !!item.decay,
     }));
-    
     return NextResponse.json({ items });
-  } catch (error) {
-    console.error('List error:', error);
-    return NextResponse.json({ error: 'Failed to retrieve URLs' }, { status: 500 });
-  }
+  } catch (error) { console.error('List error:', error); return NextResponse.json({ error: 'Failed to retrieve URLs' }, { status: 500 }); }
 }

@@ -1960,3 +1960,24 @@ th[style*="cursor: pointer"]:hover {
 .bot-chart-track b { display: block; height: 100%; min-width: 2px; background: #d97706; }
 .bot-chart-track span { position: absolute; right: 6px; top: 1px; color: var(--color-text-primary); font-size: 12px; font-weight: 700; }
 @media (max-width: 560px) { .bot-chart-scale { margin-left: 100px; }.bot-chart-row { grid-template-columns: 90px minmax(220px, 1fr); } }
+
+/* Shared navigation controls for list, stats, and reusable pager components. */
+.page-navigator,
+.recent-visits-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0 24px;
+}
+.page-navigator button,
+.recent-visits-controls button { min-width: 86px; padding: 8px 12px; font-size: 13px; }
+.page-navigator .metadata,
+.recent-visits-controls .metadata { min-width: 110px; text-align: center; }
+@media (max-width: 700px) {
+  .page-navigator, .recent-visits-controls { justify-content: flex-start; }
+  .page-navigator button, .recent-visits-controls button { min-width: auto; }
+}
+/* Missing is_bot on legacy records is intentionally displayed as Human. */
+.visitor-badge.human { background: #dcfce7; color: #166534; }

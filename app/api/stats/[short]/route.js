@@ -2,84 +2,18 @@ import { NextResponse } from 'next/server';
 import { findUrlByShort, regenerateQrCode } from '@/app/lib/urls';
 import { isAllowedOrigin, createForbiddenResponse } from '@/app/lib/security';
 
-export async function GET(request, { params }) {
-  // Security: only allow same-domain calls
-  if (!isAllowedOrigin(request)) {
-    return createForbiddenResponse();
-  }
-
-  const { short } = params;
-
-  if (!short) {
-    return NextResponse.json({ error: 'Short code is required' }, { status: 400 });
-  }
-
-  try {
-    const entry = await findUrlByShort(short);
-
-    if (!entry) {
-      return NextResponse.json({ error: 'Short URL not found' }, { status: 404 });
-    }
-
-    const stats = entry.stats || [];
-    const accessCount = stats.length;
-
-    return NextResponse.json({
-      id: entry.id,
-      original: entry.original,
-      created: entry.created,
-      accessCount,
-      stats: stats, // array of {timestamp, ip, userAgent, referer}
-      qrCode: entry.qrCode || null,
-      private: !!entry.private,
-      title: entry.title || null,
-      expiresAt: entry.expiresAt || null,
-      maxClicks: entry.maxClicks != null ? entry.maxClicks : null,
-    });
-  } catch (error) {
-    console.error('Stats error:', error);
-    return NextResponse.json({ error: 'Failed to retrieve stats' }, { status: 500 });
-  }
+function responseFor(entry, extra = {}) {
+  const stats = (entry.stats || []).map(stat => ({ ...stat, is_bot: stat.is_bot === true || stat.isBot === true }));
+  const botAccessCount = stats.filter(stat => stat.is_bot).length;
+  return { id: entry.id, original: entry.original, created: entry.created, accessCount: stats.length, humanAccessCount: stats.length - botAccessCount, botAccessCount, stats, qrCode: entry.qrCode || null, private: !!entry.private, title: entry.title || null, expiresAt: entry.expiresAt || null, maxClicks: entry.maxClicks != null ? entry.maxClicks : null, decay: !!entry.decay, ...extra };
 }
-
-// POST: Regenerate QR code for this short URL (protected by middleware + origin check)
+export async function GET(request, { params }) {
+  if (!isAllowedOrigin(request)) return createForbiddenResponse(); const { short } = params; if (!short) return NextResponse.json({ error: 'Short code is required' }, { status: 400 });
+  try { const entry=await findUrlByShort(short); if(!entry) return NextResponse.json({error:'Short URL not found'},{status:404}); return NextResponse.json(responseFor(entry)); }
+  catch(error){ console.error('Stats error:',error); return NextResponse.json({error:'Failed to retrieve stats'},{status:500}); }
+}
 export async function POST(request, { params }) {
-  // Security: only allow same-domain calls
-  if (!isAllowedOrigin(request)) {
-    return createForbiddenResponse();
-  }
-
-  const { short } = params;
-
-  if (!short) {
-    return NextResponse.json({ error: 'Short code is required' }, { status: 400 });
-  }
-
-  try {
-    const updated = await regenerateQrCode(short);
-
-    if (!updated) {
-      return NextResponse.json({ error: 'Short URL not found' }, { status: 404 });
-    }
-
-    const stats = updated.stats || [];
-    const accessCount = stats.length;
-
-    return NextResponse.json({
-      id: updated.id,
-      original: updated.original,
-      created: updated.created,
-      accessCount,
-      stats: stats,
-      qrCode: updated.qrCode || null,
-      private: !!updated.private,
-      title: updated.title || null,
-      expiresAt: updated.expiresAt || null,
-      maxClicks: updated.maxClicks != null ? updated.maxClicks : null,
-      regenerated: true,
-    });
-  } catch (error) {
-    console.error('QR regenerate error:', error);
-    return NextResponse.json({ error: 'Failed to regenerate QR code' }, { status: 500 });
-  }
+  if (!isAllowedOrigin(request)) return createForbiddenResponse(); const { short }=params; if(!short) return NextResponse.json({error:'Short code is required'},{status:400});
+  try { const updated=await regenerateQrCode(short); if(!updated) return NextResponse.json({error:'Short URL not found'},{status:404}); return NextResponse.json(responseFor(updated,{regenerated:true})); }
+  catch(error){ console.error('QR regenerate error:',error); return NextResponse.json({error:'Failed to regenerate QR code'},{status:500}); }
 }
