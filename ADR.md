@@ -369,3 +369,15 @@
 * **Context:** The homepage used one shared result state and rendered the shortening result after both forms, making it unclear whether a result came from Standard Link or Decay Link.
 * **Decision:** Updated `app/page.js` with separate `standardResult` and `decayResult` state, separate form-scoped error state, and a shared result renderer. Each result is now rendered directly below its originating form: Standard Link below the standard form and Decay Link below the decay form.
 * **Consequences:** Users can immediately associate each shortened URL with the correct form. Existing result metadata, QR rendering, validation, loading behavior, and backend requests remain unchanged. Errors are also scoped to the form that produced them.
+
+## 36. Analytics Dashboards for All Links and Individual Links
+* **Date:** 2026-09-21
+* **Context:** The `/list` experience needed analytics for all links, while each `/stats/[short]` view needed human/bot charts over selectable periods. Requested visualizations included percentages, daily bars, stacked accumulation, weekday/hour heatmap, browsers, and traffic origins.
+* **Decision:** Added the shared server aggregation module `app/lib/analytics.js`, protected `GET /api/analytics` endpoint, reusable `app/components/AnalyticsDashboard.js`, and nested layouts for `/list` and `/stats/[short]`. The implementation uses existing persisted visit metadata, supports 1 week, 1 month, 3 months, and all-time ranges, and renders responsive SVG/CSS charts without a third-party chart dependency.
+* **Consequences:** Both pages now expose consistent interactive analytics with file/Cosmos parity and no data migration. A small custom visualization layer avoids dependency/bundle cost, but it has fewer advanced features than a full chart library. Legacy records without bot classification remain treated as human.
+
+## 37. English Translation of the `/list` Experience
+* **Date:** 2026-09-21
+* **Context:** The `/list` page needed to be fully presented in English. The page itself was mostly English, but the nested analytics dashboard still exposed Spanish labels, messages, chart legends, tooltips, and accessibility text.
+* **Decision:** Translated all user-facing strings in `app/components/AnalyticsDashboard.js` and reviewed/normalized visible copy in `app/list/page.js`. Preserved all existing list, audit, analytics, authentication, caching, sorting, filtering, and pagination behavior.
+* **Consequences:** The protected `/list` experience is now consistent for English-speaking users, including analytics loading, empty, error, chart, range, and screen-reader text. No backend or data changes were required.
