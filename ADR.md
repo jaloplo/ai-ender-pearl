@@ -423,3 +423,36 @@
 * **Context:** The `/list` and `/stats/[short]` pages showed inconsistent access totals, human/bot distinctions, bot analytics, and page navigator styling. Legacy records can omit the persisted bot flag.
 * **Decision:** Normalized `is_bot` and legacy `isBot` values at the list and stats API boundaries, treated missing classification as human, and exposed explicit human/bot counts for link statistics. Updated `app/lib/analytics.js` so range-filtered bot rankings count only explicitly classified bot visits. Standardized list, recent-visit, and stats access-log pagination around the same navigator structure and CSS treatment.
 * **Consequences:** Accesses are now consistently displayed as `human (bot)`, Total Clicks per Bot is range-correct and excludes human visits, and pagination has one shared visual language. Existing data remains backward compatible without migration; unidentified legacy visits intentionally remain human.
+
+## 45. Technical Database and Bot Selection Documentation
+* **Date:** 2026-09-21
+* **Context:** The project needed a technical reference explaining how the runtime selects local JSON storage or Cosmos DB for development and production, and how User-Agent bot classification relates to visit logging and analytics.
+* **Decision:** Created `Technical_Database.txt` documenting the `COSMOS_MONGODB_URI` backend switch, file/Cosmos adapter parity, environment configuration, production safeguards, bot detection, Decay-link protection, compatibility behavior, architecture flow, and troubleshooting guidance. No application code was changed.
+* **Consequences:** Developers and operators have a single text-based reference for deployment and database selection decisions. The document clarifies that database selection and bot classification are independent, while recording the current fallback behavior and its production limitations.
+
+
+## 46. Clarify Current Bot Persistence Behavior in Technical Documentation
+* **Date:** 2026-09-21
+* **Context:** Source review showed that `isBotUserAgent()` exists and Decay protection uses bot patterns, but the redirect does not currently pass the classification into `logAccess()` and the Cosmos adapter does not persist `is_bot`.
+* **Decision:** Added an implementation-status note to `Technical_Database.txt` distinguishing intended analytics compatibility from the current persistence gap, including the precise remediation direction. Added the analysis to `reasoning.md`.
+* **Consequences:** The documentation is accurate about current behavior and avoids claiming that all newly logged visits are persistently classified. Maintainers have a clear follow-up without changing runtime code in this documentation-only request.
+
+
+## 47. Request-Time User-Agent Bot Classification
+* **Date:** 2026-09-22
+* **Context:** Bot status was being determined too late, while stats or analytics were rendered, instead of being fixed when each redirect request was received. The Cosmos statistics adapter also did not persist the classification.
+* **Decision:** Classify the incoming `User-Agent` in `app/[short]/route.js` using the shared `isBotUserAgent()` helper and pass the boolean to `logAccess()`. Persist and normalize `is_bot` in both `app/lib/urls.js` (JSON) and `app/lib/cosmos.js` (MongoDB/Cosmos), including URL stats and recent visits.
+* **Consequences:** Every logged visit has a stable request-time bot classification for list, stats, and analytics rendering. Existing unclassified records remain human-compatible, and Decay preview-bot protection continues to avoid logging/consuming protected previews. Storage behavior is now consistent across backends.
+
+
+## 48. Consistent Bot Filtering and Assignment Across List and Stats Components
+* **Date:** 2026-09-22
+* **Context:** The request-time bot classification implemented for URL redirects needed to be consistently consumed by the Last 50 Visited URLs and Analytics for All Links components on `/list`, and by Link Analytics and Access Log on `/stats`.
+* **Decision:** Reused the centralized `isBotUserAgent()` detector at `/api/urls` and `/api/visits` compatibility boundaries, normalized both `is_bot` and legacy `isBot`, explicitly mounted the list components in `app/list/page.js`, and updated the stats access log to use the same classification semantics. Redirect logging now passes the request-time `isBot` value to storage.
+* **Consequences:** List, recent visits, analytics, and link access logs now agree on human/bot assignment, including legacy records. Existing storage and analytics contracts remain compatible, with no migration required. Explicit persisted classifications are preserved and User-Agent fallback handles older data.
+
+## 49. Shared Visit Classification Layer for List and Stats Analytics
+* **Date:** 2026-09-22
+* **Context:** Bot filtering and assignment had to be reusable and consistent across Last 50 Visited URLs, Analytics for All Links, Link Analytics, and Access Log, rather than being duplicated at individual API/UI boundaries.
+* **Decision:** Added `app/lib/visit-classification.js` with shared bot patterns, explicit `is_bot`/`isBot` precedence, User-Agent fallback, and normalization. Updated URL storage, APIs, analytics aggregation, and list/stats consumers to use the shared classification while retaining request-time redirect assignment.
+* **Consequences:** All four components now agree on visitor type and analytics totals, including legacy records. The implementation remains backward compatible and avoids schema migration, while centralizing future bot-rule changes in one reusable module.

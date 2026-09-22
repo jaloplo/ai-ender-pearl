@@ -1,19 +1,8 @@
 import { NextResponse } from 'next/server';
 import { findUrlByShort, regenerateQrCode } from '@/app/lib/urls';
+import { classifyVisit } from '@/app/lib/visit-classification';
 import { isAllowedOrigin, createForbiddenResponse } from '@/app/lib/security';
 
-function responseFor(entry, extra = {}) {
-  const stats = (entry.stats || []).map(stat => ({ ...stat, is_bot: stat.is_bot === true || stat.isBot === true }));
-  const botAccessCount = stats.filter(stat => stat.is_bot).length;
-  return { id: entry.id, original: entry.original, created: entry.created, accessCount: stats.length, humanAccessCount: stats.length - botAccessCount, botAccessCount, stats, qrCode: entry.qrCode || null, private: !!entry.private, title: entry.title || null, expiresAt: entry.expiresAt || null, maxClicks: entry.maxClicks != null ? entry.maxClicks : null, decay: !!entry.decay, ...extra };
-}
-export async function GET(request, { params }) {
-  if (!isAllowedOrigin(request)) return createForbiddenResponse(); const { short } = params; if (!short) return NextResponse.json({ error: 'Short code is required' }, { status: 400 });
-  try { const entry=await findUrlByShort(short); if(!entry) return NextResponse.json({error:'Short URL not found'},{status:404}); return NextResponse.json(responseFor(entry)); }
-  catch(error){ console.error('Stats error:',error); return NextResponse.json({error:'Failed to retrieve stats'},{status:500}); }
-}
-export async function POST(request, { params }) {
-  if (!isAllowedOrigin(request)) return createForbiddenResponse(); const { short }=params; if(!short) return NextResponse.json({error:'Short code is required'},{status:400});
-  try { const updated=await regenerateQrCode(short); if(!updated) return NextResponse.json({error:'Short URL not found'},{status:404}); return NextResponse.json(responseFor(updated,{regenerated:true})); }
-  catch(error){ console.error('QR regenerate error:',error); return NextResponse.json({error:'Failed to regenerate QR code'},{status:500}); }
-}
+function responseFor(entry, extra = {}) { const stats=(entry.stats||[]).map(stat=>({...stat,is_bot:classifyVisit(stat)})); const botAccessCount=stats.filter(stat=>stat.is_bot).length; return {id:entry.id,original:entry.original,created:entry.created,accessCount:stats.length,humanAccessCount:stats.length-botAccessCount,botAccessCount,stats,qrCode:entry.qrCode||null,private:!!entry.private,title:entry.title||null,expiresAt:entry.expiresAt||null,maxClicks:entry.maxClicks!=null?entry.maxClicks:null,decay:!!entry.decay,...extra}; }
+export async function GET(request,{params}) { if(!isAllowedOrigin(request))return createForbiddenResponse();const {short}=params;if(!short)return NextResponse.json({error:'Short code is required'},{status:400});try{const entry=await findUrlByShort(short);if(!entry)return NextResponse.json({error:'Short URL not found'},{status:404});return NextResponse.json(responseFor(entry));}catch(error){console.error('Stats error:',error);return NextResponse.json({error:'Failed to retrieve stats'},{status:500});} }
+export async function POST(request,{params}) { if(!isAllowedOrigin(request))return createForbiddenResponse();const {short}=params;if(!short)return NextResponse.json({error:'Short code is required'},{status:400});try{const updated=await regenerateQrCode(short);if(!updated)return NextResponse.json({error:'Short URL not found'},{status:404});return NextResponse.json(responseFor(updated,{regenerated:true}));}catch(error){console.error('QR regenerate error:',error);return NextResponse.json({error:'Failed to regenerate QR code'},{status:500});} }

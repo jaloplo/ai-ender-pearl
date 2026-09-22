@@ -1,6 +1,5 @@
-import AnalyticsDashboard from '@/app/components/AnalyticsDashboard';
-import RecentVisitsPager from '@/app/components/RecentVisitsPager';
-
 export default function ListLayout({ children }) {
-  return <div className="list-layout">{children}<RecentVisitsPager /><AnalyticsDashboard /></div>;
+  // List page owns the order of its audit and analytics sections so they are
+  // rendered exactly once and remain adjacent to the URL table.
+  return <div className="list-layout">{children}</div>;
 }

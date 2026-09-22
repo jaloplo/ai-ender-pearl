@@ -4,11 +4,92 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import AnalyticsDashboard from '@/app/components/AnalyticsDashboard';
 import PageNavigator from '@/app/components/PageNavigator';
-const PAGE_SIZE=10;
-export default function StatsPage(){const {short}=useParams();const [data,setData]=useState(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[refreshingTitle,setRefreshingTitle]=useState(false),[titleMessage,setTitleMessage]=useState(''),[page,setPage]=useState(1),[sort,setSort]=useState({column:'timestamp',direction:'desc'});
- const load=async()=>{if(!short)return;setLoading(true);try{const r=await fetch(`/api/stats/${short}`),d=await r.json();if(!r.ok){if(r.status===401||r.status===403)window.location.href='/login';throw new Error(d.error||'Failed to load stats')}setData(d);setError('')}catch(e){setError(e.message||'Failed to fetch stats.')}finally{setLoading(false)}};useEffect(()=>{load()},[short]);
- const refreshTitle=async()=>{setRefreshingTitle(true);setTitleMessage('');try{const r=await fetch(`/api/stats/${short}/title`,{method:'POST'}),d=await r.json();if(!r.ok)throw new Error(d.error||'Could not refresh title');setData(p=>({...p,title:d.title}));setTitleMessage('Title updated successfully.')}catch(e){setTitleMessage(e.message)}finally{setRefreshingTitle(false)}};
- const stats=data?.stats||[],sorted=useMemo(()=>[...stats].sort((a,b)=>{const val=x=>sort.column==='timestamp'?new Date(x.timestamp||0).getTime():sort.column==='visitor'?(x.is_bot===true?1:0):String(x[sort.column]||'').toLowerCase();const c=val(a)<val(b)?-1:val(a)>val(b)?1:0;return sort.direction==='asc'?c:-c}),[stats,sort]); const totalPages=Math.max(1,Math.ceil(sorted.length/PAGE_SIZE));useEffect(()=>{if(page>totalPages)setPage(totalPages)},[page,totalPages]);const changeSort=c=>setSort(s=>s.column===c?{...s,direction:s.direction==='asc'?'desc':'asc'}:{column:c,direction:c==='timestamp'?'desc':'asc'});const arrow=c=>sort.column===c?(sort.direction==='asc'?' ▲':' ▼'):'';
- if(loading)return <p className="metadata">Loading stats...</p>;if(error)return <><h2>Stats Error</h2><div className="error">{error}</div></>;if(!data)return <p>No data.</p>;const {id,original,created,title,expiresAt,maxClicks,qrCode,private:isPrivate,decay}=data;const shortUrl=`${window.location.origin}/${id}`;const humans=data.humanAccessCount??stats.filter(s=>s.is_bot!==true).length;const bots=data.botAccessCount??stats.filter(s=>s.is_bot===true).length;const rows=[['Original URL',<a href={original} target="_blank" rel="noopener noreferrer">{original}</a>],['Short Code',<code className="short-url">{id}</code>],['Short URL',<a href={shortUrl} target="_blank" rel="noopener noreferrer" className="short-url">{shortUrl}</a>],['Creation Date',new Date(created).toLocaleString()],['Visibility',isPrivate?'Private':'Public'],['When Expires',expiresAt?new Date(expiresAt).toLocaleString():'Never'],['Max Clicks',maxClicks??'Unlimited'],['Type',decay?'🔥 Decay':'Standard'],['Total Accesses',`${humans} (${bots})`]];
- return <><h2>{title||original} data content</h2><section className="stats-detail-row"><div className="stats-details-panel"><h2>Link Details</h2><table className="stats-details-table"><tbody>{rows.map(([label,value])=><tr key={label}><th scope="row">{label}</th><td>{value}</td></tr>)}</tbody></table></div><section className="stats-qr-section"><h2>QR Code</h2><div className="qr-stats-panel">{qrCode?<img src={qrCode} alt={`QR code for ${shortUrl}`} className="qr-stats-image"/>:<p className="metadata">No QR code available.</p>}<p className="metadata">This QR encodes the shortened URL.</p><button className="secondary" onClick={refreshTitle} disabled={refreshingTitle}>{refreshingTitle?'Reading original URL...':'↻ Read original URL title again'}</button>{titleMessage&&<p className="metadata">{titleMessage}</p>}</div></section></section><AnalyticsDashboard short={short}/><section className="access-log-section"><h2>Access Log</h2>{!sorted.length?<p className="metadata">No accesses recorded yet for this shortened URL.</p>:<><table><thead><tr>{[['timestamp','Date & Time'],['ip','IP Address'],['userAgent','Web Browser (User-Agent)'],['referer','Referer'],['visitor','Visitor Type']].map(([key,label])=><th key={key} onClick={()=>changeSort(key)}>{label}{arrow(key)}</th>)}</tr></thead><tbody>{sorted.slice((page-1)*PAGE_SIZE,page*PAGE_SIZE).map((stat,index)=><tr key={`${stat.timestamp}-${index}`}><td>{new Date(stat.timestamp).toLocaleString()}</td><td><code>{stat.ip}</code></td><td style={{wordBreak:'break-all'}}>{stat.userAgent}</td><td style={{wordBreak:'break-all'}}>{stat.referer||'(none)'}</td><td>{stat.is_bot===true?'🤖 Bot':'👤 Human'}</td></tr>)}</tbody></table><PageNavigator page={page} totalPages={totalPages} onPageChange={setPage}/></>}</section><p><a href="/list">← Back to URL List</a></p></>;
+import { classifyVisit } from '@/app/lib/visit-classification';
+
+const PAGE_SIZE = 10;
+
+export default function StatsPage() {
+  const { short } = useParams();
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [refreshingTitle, setRefreshingTitle] = useState(false);
+  const [titleMessage, setTitleMessage] = useState('');
+  const [page, setPage] = useState(1);
+  const [sort, setSort] = useState({ column: 'timestamp', direction: 'desc' });
+
+  const load = async () => {
+    if (!short) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/stats/${short}`);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to load stats');
+      setData(result);
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Failed to fetch stats.');
+    } finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, [short]);
+
+  const refreshTitle = async () => {
+    setRefreshingTitle(true); setTitleMessage('');
+    try {
+      const response = await fetch(`/api/stats/${short}/title`, { method: 'POST' });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not refresh title');
+      setData(previous => ({ ...previous, title: result.title }));
+      setTitleMessage('Title updated successfully.');
+    } catch (err) { setTitleMessage(err.message); }
+    finally { setRefreshingTitle(false); }
+  };
+
+  const stats = data?.stats || [];
+  const sorted = useMemo(() => [...stats].sort((a, b) => {
+    const value = item => sort.column === 'timestamp'
+      ? new Date(item.timestamp || 0).getTime()
+      : sort.column === 'visitor' ? (classifyVisit(item) ? 1 : 0)
+      : String(item[sort.column] || '').toLowerCase();
+    const comparison = value(a) < value(b) ? -1 : value(a) > value(b) ? 1 : 0;
+    return sort.direction === 'asc' ? comparison : -comparison;
+  }), [stats, sort]);
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
+  const changeSort = column => setSort(previous => previous.column === column
+    ? { column, direction: previous.direction === 'asc' ? 'desc' : 'asc' }
+    : { column, direction: column === 'timestamp' ? 'desc' : 'asc' });
+  const arrow = column => sort.column === column ? (sort.direction === 'asc' ? ' ▲' : ' ▼') : '';
+
+  if (loading) return <p className="metadata">Loading stats...</p>;
+  if (error) return <><h2>Stats Error</h2><div className="error">{error}</div></>;
+  if (!data) return <p>No data.</p>;
+
+  const { id, original, created, title, expiresAt, maxClicks, qrCode, private: isPrivate, decay } = data;
+  const shortUrl = `${window.location.origin}/${id}`;
+  const normalizedStats = stats.map(stat => ({ ...stat, is_bot: classifyVisit(stat) }));
+  const humans = normalizedStats.filter(stat => !stat.is_bot).length;
+  const bots = normalizedStats.filter(stat => stat.is_bot).length;
+  const rows = [
+    ['Original URL', <a href={original} target="_blank" rel="noopener noreferrer" key="original">{original}</a>],
+    ['Short Code', <code className="short-url" key="code">{id}</code>],
+    ['Short URL', <a href={shortUrl} target="_blank" rel="noopener noreferrer" className="short-url" key="short">{shortUrl}</a>],
+    ['Creation Date', new Date(created).toLocaleString()],
+    ['Visibility', isPrivate ? 'Private' : 'Public'],
+    ['When Expires', expiresAt ? new Date(expiresAt).toLocaleString() : 'Never'],
+    ['Max Clicks', maxClicks ?? 'Unlimited'],
+    ['Type', decay ? '🔥 Decay' : 'Standard'],
+    ['Total Accesses', `${humans} (${bots})`],
+  ];
+
+  return <>
+    <h2>{title || original} data content</h2>
+    <section className="stats-detail-row">
+      <div className="stats-details-panel"><h2>Link Details</h2><table className="stats-details-table"><tbody>{rows.map(([label, value]) => <tr key={label}><th scope="row">{label}</th><td>{value}</td></tr>)}</tbody></table></div>
+      <section className="stats-qr-section"><h2>QR Code</h2><div className="qr-stats-panel">{qrCode ? <img src={qrCode} alt={`QR code for ${shortUrl}`} className="qr-stats-image" /> : <p className="metadata">No QR code available.</p>}<p className="metadata">This QR encodes the shortened URL.</p><button className="secondary" onClick={refreshTitle} disabled={refreshingTitle}>{refreshingTitle ? 'Reading original URL...' : '↻ Read original URL title again'}</button>{titleMessage && <p className="metadata">{titleMessage}</p>}</div></section>
+    </section>
+    <AnalyticsDashboard short={short} />
+    <section className="access-log-section"><h2>Access Log</h2>{!sorted.length ? <p className="metadata">No accesses recorded yet for this shortened URL.</p> : <><table><thead><tr>{[['timestamp','Date & Time'],['ip','IP Address'],['userAgent','Web Browser (User-Agent)'],['referer','Referer'],['visitor','Visitor Type']].map(([key, label]) => <th key={key} onClick={() => changeSort(key)}>{label}{arrow(key)}</th>)}</tr></thead><tbody>{sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((stat, index) => <tr key={`${stat.timestamp}-${index}`}><td>{new Date(stat.timestamp).toLocaleString()}</td><td><code>{stat.ip}</code></td><td style={{ wordBreak: 'break-all' }}>{stat.userAgent}</td><td style={{ wordBreak: 'break-all' }}>{stat.referer || '(none)'}</td><td>{classifyVisit(stat) ? '🤖 Bot' : '👤 Human'}</td></tr>)}</tbody></table><PageNavigator page={page} totalPages={totalPages} onPageChange={setPage} /></>}</section>
+    <p><a href="/list">← Back to URL List</a></p>
+  </>;
 }
