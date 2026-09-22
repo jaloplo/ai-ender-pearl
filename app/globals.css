@@ -1981,3 +1981,200 @@ th[style*="cursor: pointer"]:hover {
 }
 /* Missing is_bot on legacy records is intentionally displayed as Human. */
 .visitor-badge.human { background: #dcfce7; color: #166534; }
+
+
+/* ========================================
+   LIST + STATS PAGE DESIGN STANDARDIZATION
+   Shared editorial headings and utility controls for protected management views.
+   ======================================== */
+
+.list-layout .list-heading,
+.stats-page-title,
+.stats-detail-row h2,
+.access-log-section h2,
+.analytics-dashboard h2,
+.analytics-card h3,
+.recent-visits-pager h2 {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  color: var(--color-text-primary);
+}
+
+.list-layout .list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--color-text-primary);
+}
+
+.list-layout .list-heading h2,
+.stats-page-title,
+.stats-detail-row h2,
+.access-log-section h2,
+.analytics-dashboard h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.list-layout h3,
+.stats-detail-row h3,
+.access-log-section h3,
+.analytics-dashboard h3,
+.analytics-card h3 {
+  margin: 0 0 12px;
+  color: var(--color-text-primary);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.list-layout .list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 20px 0 16px;
+  padding: 12px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.list-layout .list-toolbar input,
+.list-layout .list-toolbar select {
+  min-height: 42px;
+  box-sizing: border-box;
+  margin: 0;
+  border: 1px solid #cfcfcf;
+  border-radius: 4px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font: 500 14px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.list-layout .list-toolbar input {
+  flex: 1 1 280px;
+  padding: 10px 12px;
+}
+
+.list-layout .list-toolbar select {
+  min-width: 110px;
+  padding: 10px 30px 10px 12px;
+  cursor: pointer;
+}
+
+.list-layout .list-toolbar input:focus,
+.list-layout .list-toolbar select:focus {
+  outline: none;
+  border-color: var(--color-brand-accent);
+  box-shadow: 0 0 0 2px rgba(102, 205, 122, 0.18);
+}
+
+.list-layout .list-toolbar button,
+.list-layout .list-heading button,
+.list-layout .page-navigator button,
+.stats-page-title ~ button,
+.stats-detail-row button,
+.access-log-section button,
+.analytics-ranges button {
+  border: 1px solid #bdbdbd;
+  border-radius: 4px;
+  font: 600 13px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.list-layout .list-toolbar button.secondary,
+.list-layout .list-heading button.secondary,
+.list-layout .page-navigator button.secondary,
+.stats-detail-row button.secondary,
+.access-log-section button.secondary,
+.analytics-ranges button {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.list-layout .list-toolbar button:hover:not(:disabled),
+.list-layout .list-heading button:hover:not(:disabled),
+.list-layout .page-navigator button:hover:not(:disabled),
+.stats-detail-row button:hover:not(:disabled),
+.access-log-section button:hover:not(:disabled),
+.analytics-ranges button:hover:not(:disabled) {
+  background: #eef8f0;
+  border-color: var(--color-brand-accent);
+  opacity: 1;
+}
+
+.list-layout .column-selector {
+  max-width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid var(--color-border-subtle);
+  border-left: 3px solid var(--color-brand-accent);
+  border-radius: 4px;
+  background: var(--color-bg-secondary);
+}
+
+.list-layout .column-selector label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.list-layout table th,
+.access-log-section table th,
+.stats-details-table th {
+  background: #f0f4f1;
+  border-color: #cfd8d1;
+  color: var(--color-text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.list-layout table,
+.access-log-section table,
+.stats-details-table {
+  border-color: #cfd8d1;
+}
+
+.analytics-dashboard {
+  border-top-color: var(--color-text-primary);
+}
+
+.analytics-card {
+  border-color: #cfd8d1;
+}
+
+@media (max-width: 640px) {
+  .list-layout .list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .list-layout .list-heading h2,
+  .stats-page-title,
+  .stats-detail-row h2,
+  .access-log-section h2,
+  .analytics-dashboard h2 {
+    font-size: 23px;
+  }
+
+  .list-layout .list-toolbar input,
+  .list-layout .list-toolbar select,
+  .list-layout .list-toolbar button {
+    width: 100%;
+    flex-basis: 100%;
+  }
+}

@@ -4,7 +4,7 @@ import RecentVisitsPager from '@/app/components/RecentVisitsPager';
 import AnalyticsDashboard from '@/app/components/AnalyticsDashboard';
 import { classifyVisit } from '@/app/lib/visit-classification';
 export default function ListPage() {
-  const [items,setItems]=useState([]),[searchTerm,setSearchTerm]=useState(''),[pageSize,setPageSize]=useState(50),[currentPage,setCurrentPage]=useState(1),[loading,setLoading]=useState(true),[error,setError]=useState(''),[lastUpdated,setLastUpdated]=useState(null),[updatingId,setUpdatingId]=useState(null);
+  const [items,setItems]=useState([]),[searchTerm,setSearchTerm]=useState(''),[pageSize,setPageSize]=useState(10),[currentPage,setCurrentPage]=useState(1),[loading,setLoading]=useState(true),[error,setError]=useState(''),[lastUpdated,setLastUpdated]=useState(null),[updatingId,setUpdatingId]=useState(null);
   const [sortColumn,setSortColumn]=useState(null),[sortDirection,setSortDirection]=useState('asc'),[showColumnSelector,setShowColumnSelector]=useState(false),[visibleColumns,setVisibleColumns]=useState(['shortCode','originalUrl','created','visibility','accesses','actions']); const CACHE_KEY='urlShortenerCache',CACHE_TTL_MS=5*60*1000;
   const allColumns=[{key:'shortCode',label:'Short Code'},{key:'shortenedUrl',label:'Shortened URL'},{key:'originalUrl',label:'Original URL'},{key:'title',label:'Title'},{key:'created',label:'Created'},{key:'visibility',label:'Visibility'},{key:'accesses',label:'Accesses'},{key:'expires',label:'Expires At'},{key:'maxClicks',label:'Max Clicks'},{key:'decay',label:'Type'},{key:'actions',label:'Actions'}];
   const normalize=value=>(value||[]).map(item=>({...item,stats:(item.stats||[]).map(stat=>({...stat,is_bot:classifyVisit(stat)}))}));

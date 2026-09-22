@@ -456,3 +456,10 @@
 * **Context:** Bot filtering and assignment had to be reusable and consistent across Last 50 Visited URLs, Analytics for All Links, Link Analytics, and Access Log, rather than being duplicated at individual API/UI boundaries.
 * **Decision:** Added `app/lib/visit-classification.js` with shared bot patterns, explicit `is_bot`/`isBot` precedence, User-Agent fallback, and normalization. Updated URL storage, APIs, analytics aggregation, and list/stats consumers to use the shared classification while retaining request-time redirect assignment.
 * **Consequences:** All four components now agree on visitor type and analytics totals, including legacy records. The implementation remains backward compatible and avoids schema migration, while centralizing future bot-rule changes in one reusable module.
+
+
+## 50. Standardize List and Stats Page Controls and Headings
+* **Date:** 2026-09-22
+* **Context:** The protected `/list` and `/stats/[short]` pages used inconsistent heading emphasis, table header treatment, and list form-control styling. The request was to standardize h2/h3 headers plus list buttons, textbox, and select controls.
+* **Decision:** Added a scoped visual standardization layer to `app/globals.css`. It aligns list/stats headings with the editorial serif hierarchy, gives list sections a consistent divider, groups list controls in a bordered toolbar, styles textboxes/selects/buttons with shared dimensions, borders, focus, and hover states, and harmonizes list/stats table headers and analytics cards. Responsive stacking was added for narrow screens.
+* **Consequences:** The two management surfaces now share a clearer visual system and more predictable controls while preserving all existing behavior, responsive layouts, authentication, analytics, and data flows. The change is CSS-only and introduces no migration or dependency impact.
