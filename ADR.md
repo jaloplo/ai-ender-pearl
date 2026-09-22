@@ -463,3 +463,10 @@
 * **Context:** The protected `/list` and `/stats/[short]` pages used inconsistent heading emphasis, table header treatment, and list form-control styling. The request was to standardize h2/h3 headers plus list buttons, textbox, and select controls.
 * **Decision:** Added a scoped visual standardization layer to `app/globals.css`. It aligns list/stats headings with the editorial serif hierarchy, gives list sections a consistent divider, groups list controls in a bordered toolbar, styles textboxes/selects/buttons with shared dimensions, borders, focus, and hover states, and harmonizes list/stats table headers and analytics cards. Responsive stacking was added for narrow screens.
 * **Consequences:** The two management surfaces now share a clearer visual system and more predictable controls while preserving all existing behavior, responsive layouts, authentication, analytics, and data flows. The change is CSS-only and introduces no migration or dependency impact.
+
+
+## 51. Stats QR Generation/Clipboard Actions and Settings Menu Label
+* **Date:** 2026-09-22
+* **Context:** The `/stats` detail page needed controls to generate/regenerate the QR code for the current shortened URL and copy that QR image to the clipboard. The authenticated header menu also needed `List URLs` renamed to `Settings`.
+* **Decision:** Updated `app/stats/[short]/page.js` to add QR generation/regeneration and image clipboard actions using the existing protected stats POST endpoint and Clipboard API. Added loading/status feedback and responsive `.qr-stats-actions` styling in `app/globals.css`. Updated `app/layout.js` to display `Settings` while retaining the existing `/list` destination.
+* **Consequences:** Authenticated users can refresh and copy the current URL QR code directly from stats without leaving the page. Clipboard support depends on browser image-clipboard capability and reports a clear error when unavailable. Existing QR persistence, analytics, access logs, routing, and menu destination remain unchanged.

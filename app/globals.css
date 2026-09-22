@@ -2178,3 +2178,17 @@ th[style*="cursor: pointer"]:hover {
     flex-basis: 100%;
   }
 }
+
+
+/* Stats QR actions: generation/regeneration and image clipboard controls. */
+.qr-stats-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.qr-stats-actions button { flex: 1 1 150px; }
+@media (max-width: 700px) {
+  .qr-stats-actions { flex-direction: column; }
+  .qr-stats-actions button { width: 100%; }
+}

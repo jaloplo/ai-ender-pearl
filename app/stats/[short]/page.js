@@ -13,6 +13,9 @@ export default function StatsPage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [refreshingQr, setRefreshingQr] = useState(false);
+  const [copyingQr, setCopyingQr] = useState(false);
+  const [qrMessage, setQrMessage] = useState('');
   const [refreshingTitle, setRefreshingTitle] = useState(false);
   const [titleMessage, setTitleMessage] = useState('');
   const [page, setPage] = useState(1);
@@ -32,6 +35,38 @@ export default function StatsPage() {
     } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, [short]);
+
+  const regenerateQr = async () => {
+    setRefreshingQr(true);
+    setQrMessage('');
+    try {
+      const response = await fetch(`/api/stats/${short}`, { method: 'POST' });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not generate QR code');
+      setData(result);
+      setQrMessage('QR code generated successfully.');
+    } catch (err) {
+      setQrMessage(err.message || 'Could not generate QR code.');
+    } finally { setRefreshingQr(false); }
+  };
+
+  const copyQr = async () => {
+    if (!data?.qrCode) return;
+    setCopyingQr(true);
+    setQrMessage('');
+    try {
+      if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
+        throw new Error('Image clipboard is not supported by this browser.');
+      }
+      const response = await fetch(data.qrCode);
+      if (!response.ok) throw new Error('Could not read the QR code image.');
+      const blob = await response.blob();
+      await navigator.clipboard.write([new ClipboardItem({ [blob.type || 'image/png']: blob })]);
+      setQrMessage('QR code copied to the clipboard.');
+    } catch (err) {
+      setQrMessage(err.message || 'Could not copy the QR code.');
+    } finally { setCopyingQr(false); }
+  };
 
   const refreshTitle = async () => {
     setRefreshingTitle(true); setTitleMessage('');
@@ -83,10 +118,19 @@ export default function StatsPage() {
   ];
 
   return <>
-    <h2>{title || original} data content</h2>
+    <h2>{title || original}</h2>
     <section className="stats-detail-row">
       <div className="stats-details-panel"><h2>Link Details</h2><table className="stats-details-table"><tbody>{rows.map(([label, value]) => <tr key={label}><th scope="row">{label}</th><td>{value}</td></tr>)}</tbody></table></div>
-      <section className="stats-qr-section"><h2>QR Code</h2><div className="qr-stats-panel">{qrCode ? <img src={qrCode} alt={`QR code for ${shortUrl}`} className="qr-stats-image" /> : <p className="metadata">No QR code available.</p>}<p className="metadata">This QR encodes the shortened URL.</p><button className="secondary" onClick={refreshTitle} disabled={refreshingTitle}>{refreshingTitle ? 'Reading original URL...' : '↻ Read original URL title again'}</button>{titleMessage && <p className="metadata">{titleMessage}</p>}</div></section>
+      <section className="stats-qr-section"><h2>QR Code</h2><div className="qr-stats-panel">
+        {qrCode ? <img src={qrCode} alt={`QR code for ${shortUrl}`} className="qr-stats-image" /> : <p className="metadata">No QR code available.</p>}
+        <p className="metadata">This QR encodes the shortened URL.</p>
+        <div className="qr-stats-actions">
+          <button className="secondary" onClick={regenerateQr} disabled={refreshingQr}>{refreshingQr ? 'Generating QR code...' : '↻ Generate QR code'}</button>
+          <button className="secondary" onClick={copyQr} disabled={!qrCode || copyingQr}>{copyingQr ? 'Copying QR code...' : '▣ Copy QR code'}</button>
+        </div>
+        {qrMessage && <p className="metadata" role="status">{qrMessage}</p>}
+        <button className="secondary" onClick={refreshTitle} disabled={refreshingTitle}>{refreshingTitle ? 'Reading original URL...' : '↻ Read original URL title again'}</button>{titleMessage && <p className="metadata">{titleMessage}</p>}
+      </div></section>
     </section>
     <AnalyticsDashboard short={short} />
     <section className="access-log-section"><h2>Access Log</h2>{!sorted.length ? <p className="metadata">No accesses recorded yet for this shortened URL.</p> : <><table><thead><tr>{[['timestamp','Date & Time'],['ip','IP Address'],['userAgent','Web Browser (User-Agent)'],['referer','Referer'],['visitor','Visitor Type']].map(([key, label]) => <th key={key} onClick={() => changeSort(key)}>{label}{arrow(key)}</th>)}</tr></thead><tbody>{sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((stat, index) => <tr key={`${stat.timestamp}-${index}`}><td>{new Date(stat.timestamp).toLocaleString()}</td><td><code>{stat.ip}</code></td><td style={{ wordBreak: 'break-all' }}>{stat.userAgent}</td><td style={{ wordBreak: 'break-all' }}>{stat.referer || '(none)'}</td><td>{classifyVisit(stat) ? '🤖 Bot' : '👤 Human'}</td></tr>)}</tbody></table><PageNavigator page={page} totalPages={totalPages} onPageChange={setPage} /></>}</section>
