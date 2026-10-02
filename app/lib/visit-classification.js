@@ -1,14 +1,29 @@
 // Shared visit classification utilities. Keep this module dependency-free so it
 // can be reused by API boundaries, storage adapters, and analytics aggregation.
 export const BOT_PATTERNS = [
-  'bot', 'crawler', 'spider', 'slurp', 'googlebot', 'bingbot', 'baiduspider',
-  'yandex', 'duckduckbot', 'sogou', 'exabot', 'facebot', 'ia_archiver',
-  'twitterbot', 'linkedinbot', 'slackbot', 'whatsapp', 'telegram', 'discord',
-  'facebookexternalhit', 'skypeuripreview', 'preview', 'fetch', 'scanner',
-  'curl', 'wget', 'python', 'go-http', 'ahrefsbot', 'semrushbot', 'dotbot',
-  'mj12bot', 'pinterest', 'tumblr', 'vkshare', 'line', 'applebot',
-  'bingpreview', 'msnbot', 'adsbot', 'mediapartners-google', 'petalbot',
-  'seznambot', 'coccocbot',
+  // Generic bot markers
+  'bot', 'crawler', 'spider',
+
+  // Search crawlers
+  'googlebot', 'googleother', 'google-inspectiontool', 'google-agent',
+  'storebot-google', 'adsbot-google', 'apis-google', 'bingbot',
+  'bingpreview', 'baiduspider', 'yandexbot', 'duckduckbot',
+  'yahoo! slurp', 'sogou', 'exabot', 'seznambot', 'coccocbot',
+  'petalbot', 'applebot', 'bytespider', 'amazonbot',
+
+  // Social and messaging previews
+  'facebookexternalhit', 'facebot', 'twitterbot', 'linkedinbot',
+  'slackbot', 'whatsapp', 'telegrambot', 'discordbot',
+  'skypeuripreview', 'pinterestbot', 'vkshare', 'mastodon', 'Iceshrimp',
+  'Akkoma', 'Friendica', 'SubstackContentFetch',
+
+  // AI crawlers and fetchers
+  'gptbot', 'chatgpt-user', 'claudebot', 'anthropic-ai',
+  'perplexitybot', 'ccbot', 'got', 'Goodgorithm',
+
+  // SEO, archives, and monitoring
+  'ia_archiver', 'ahrefsbot', 'semrushbot', 'dotbot', 'mj12bot',
+  'uptimerobot', 'axios', 'node'
 ];
 
 export function isBotUserAgent(userAgent = '') {
