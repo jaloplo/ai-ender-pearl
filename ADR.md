@@ -477,3 +477,10 @@
 * **Context:** Analytics bot rankings were grouped by complete User-Agent-derived values, causing different versions and transport/library details of the same bot to appear as separate groups. For example, Mastodon User-Agents with different versions must be shown together as `Mastodon` for every selected analytics measure.
 * **Decision:** Updated `app/lib/analytics.js` to normalize bot ranking labels by known product tokens, including Mastodon, and to use a product-token fallback for unknown bots. The shared aggregation continues to filter visits by the selected range and exposes the same `bots` response shape, so all dashboards consume the grouping consistently.
 * **Consequences:** Versioned User-Agents now aggregate into stable product groups across bot click rankings and related analytics measures. Analytics becomes more readable and comparable, while unknown bot formats remain visible under a sanitized product label or `Unknown bot`. No persistence, API contract, or UI component changes are required.
+
+
+## 53. Restrict Clicks by Browser to Web Browsers
+* **Date:** 2026-10-02
+* **Context:** The analytics `Clicks by Browser` ranking could include bot/product labels because bot User-Agents were routed through browser classification. The request was to identify only web browsers for those bars.
+* **Decision:** Updated `app/lib/analytics.js` so browser classification remains limited to known browser signatures and browser rankings aggregate human visits only. Bot visits continue to be represented in the dedicated `Total Clicks per Bot` ranking.
+* **Consequences:** `Clicks by Browser` now contains only browser categories and no crawler/product names. Bot analytics remain available separately, while all other analytics measures, ranges, and API fields are preserved.
