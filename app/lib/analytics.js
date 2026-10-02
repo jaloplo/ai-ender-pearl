@@ -5,42 +5,12 @@ function isBotStat(stat) { return classifyVisit(stat); }
 function visitorType(stat) { return isBotStat(stat) ? 'bot' : 'human'; }
 function dayKey(date) { return date.toISOString().slice(0, 10); }
 function startForRange(range, now) { if (range === 'all') return null; const start = new Date(now); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() - ((RANGE_DAYS[range] || 7) - 1)); return start; }
-
-// Keep bot labels stable by grouping on the product name, not the complete
-// User-Agent (which commonly contains a version, library, and URL).
-const KNOWN_BOTS = [
-  ['Googlebot', 'googlebot'], ['Bingbot', 'bingbot'], ['Slackbot', 'slackbot'],
-  ['Twitterbot', 'twitterbot'], ['LinkedInBot', 'linkedinbot'], ['WhatsApp', 'whatsapp'],
-  ['TelegramBot', 'telegrambot'], ['Discordbot', 'discordbot'], ['Facebook crawler', 'facebookexternalhit'],
-  ['Applebot', 'applebot'], ['GPTBot', 'gptbot'], ['ClaudeBot', 'claudebot'],
-  ['DuckDuckBot', 'duckduckbot'], ['Mastodon', 'mastodon'], ['Iceshrimp', 'iceshrimp'],
-  ['Akkoma', 'akkoma'], ['Friendica', 'friendica'], ['Goodgorithm', 'goodgorithm'],
-  ['Node', 'node'], ['Axios', 'axios'],
-];
-function botName(userAgent = '') {
-  const ua = String(userAgent || '');
-  const lower = ua.toLowerCase();
-  const known = KNOWN_BOTS.find(([, token]) => lower.includes(token));
-  if (known) return known[0];
-  const product = ua.split(/[\s(]/).find(token => /(?:bot|crawler|spider|preview|headless)/i.test(token));
-  if (product) return product.split('/')[0].replace(/[^a-z0-9._-]/gi, '') || 'Unknown bot';
-  return 'Unknown bot';
-}
-function browserName(userAgent = '') {
-  const ua = userAgent.toLowerCase();
-  if (ua.includes('edg')) return 'Edge';
-  if (ua.includes('opr') || ua.includes('opera')) return 'Opera';
-  if (ua.includes('chrome') && !ua.includes('chromium')) return 'Chrome';
-  if (ua.includes('firefox')) return 'Firefox';
-  if (ua.includes('safari') && !ua.includes('chrome')) return 'Safari';
-  if (ua.includes('msie') || ua.includes('trident')) return 'Internet Explorer';
-  if (ua.includes('android')) return 'Android Browser';
-  return userAgent ? 'Other' : 'Unknown';
-}
-function sourceName(referer = '') { if (!referer) return 'Direct / unknown'; try { const host = new URL(referer).hostname.replace(/^www\./, ''); if (host.includes('x.com') || host.includes('twitter.com')) return 'X.com'; if (host.includes('substack.com')) return 'Substack'; if (host.includes('linkedin.com')) return 'LinkedIn'; if (host.includes('facebook.com')) return 'Facebook'; if (host.includes('reddit.com')) return 'Reddit'; return host || 'Other'; } catch { return 'Other'; } }
-function dateKeys(start, end) { const keys = []; const cursor = new Date(start); cursor.setHours(0,0,0,0); while (cursor <= end) { keys.push(dayKey(cursor)); cursor.setDate(cursor.getDate() + 1); } return keys; }
-function monday(date) { const result = new Date(date); result.setHours(0,0,0,0); result.setDate(result.getDate() - ((result.getDay() + 6) % 7)); return result; }
+const KNOWN_BOTS = [['Googlebot','googlebot'],['Bingbot','bingbot'],['Slackbot','slackbot'],['Twitterbot','twitterbot'],['LinkedInBot','linkedinbot'],['WhatsApp','whatsapp'],['TelegramBot','telegrambot'],['Discordbot','discordbot'],['Facebook crawler','facebookexternalhit'],['Applebot','applebot'],['GPTBot','gptbot'],['ClaudeBot','claudebot'],['DuckDuckBot','duckduckbot'],['Mastodon','mastodon'],['Iceshrimp','iceshrimp'],['Akkoma','akkoma'],['Friendica','friendica'],['Goodgorithm','goodgorithm'],['Node','node'],['Axios','axios']];
+function botName(userAgent='') { const ua=String(userAgent||''),lower=ua.toLowerCase(),known=KNOWN_BOTS.find(([,token])=>lower.includes(token)); if(known)return known[0]; const product=ua.split(/[\s(]/).find(token=>/(?:bot|crawler|spider|preview|headless)/i.test(token)); return product?product.split('/')[0].replace(/[^a-z0-9._-]/gi,'')||'Unknown bot':'Unknown bot'; }
+function browserName(userAgent='') { const ua=userAgent.toLowerCase(); if(ua.includes('edg'))return'Edge';if(ua.includes('opr')||ua.includes('opera'))return'Opera';if(ua.includes('chrome')&&!ua.includes('chromium'))return'Chrome';if(ua.includes('firefox'))return'Firefox';if(ua.includes('safari')&&!ua.includes('chrome'))return'Safari';if(ua.includes('msie')||ua.includes('trident'))return'Internet Explorer';if(ua.includes('android'))return'Android Browser';return userAgent?'Other':'Unknown'; }
+function sourceName(referer='') { if(!referer)return'Direct / unknown';try{const host=new URL(referer).hostname.replace(/^www\./,'');if(host.includes('x.com')||host.includes('twitter.com'))return'X.com';if(host.includes('substack.com'))return'Substack';if(host.includes('linkedin.com'))return'LinkedIn';if(host.includes('facebook.com'))return'Facebook';if(host.includes('reddit.com'))return'Reddit';return host||'Other';}catch{return'Other';} }
+function socialSource(stat) { const value=String(stat.source||stat.querySource||'').toLowerCase(); return ['linkedin','mastodon','x','notes','substack'].includes(value)?value:'unknown'; }
+function dateKeys(start,end) { const keys=[],cursor=new Date(start);cursor.setHours(0,0,0,0);while(cursor<=end){keys.push(dayKey(cursor));cursor.setDate(cursor.getDate()+1);}return keys; }
+function monday(date) { const result=new Date(date);result.setHours(0,0,0,0);result.setDate(result.getDate()-((result.getDay()+6)%7));return result; }
 function weekKey(date) { return dayKey(monday(date)); }
-export function buildAnalytics(items, range = 'week') { const now = new Date(); const allStats = []; for (const item of items || []) for (const stat of item.stats || []) { const date = safeDate(stat.timestamp); if (date) allStats.push({ ...stat, date, itemId: item.id }); } const start = startForRange(range, now); const matching = allStats.filter(stat => !start || stat.date >= start); const aggregateWeeks = range === 'quarter' || range === 'all'; let first = matching.length ? new Date(Math.min(...matching.map(s => s.date))) : new Date(now); first.setHours(0,0,0,0); const periodStart = aggregateWeeks ? monday(start || first) : (start || first); const end = new Date(now); end.setHours(0,0,0,0); const keys = aggregateWeeks ? (() => { const result=[]; const cursor=new Date(periodStart); while(cursor<=end){result.push(dayKey(cursor)); cursor.setDate(cursor.getDate()+7);} return result; })() : dateKeys(periodStart,end); const byPeriod = Object.fromEntries(keys.map(key => [key, { date:key, human:0, bot:0, label:aggregateWeeks ? `Week of ${key.slice(5)}` : undefined }])); const browsers={}, sources={}, bots={}; const heatmap=Array.from({length:7},()=>Array(24).fill(0)); for (const stat of matching) { const type=visitorType(stat); const key=aggregateWeeks ? weekKey(stat.date) : dayKey(stat.date); if(byPeriod[key]) byPeriod[key][type]++; // Browser rankings intentionally include human visits only; bot products belong exclusively in the bot ranking.
-    if(type === 'human') { const browser=browserName(stat.userAgent); browsers[browser]=(browsers[browser]||0)+1; }
-    const source=sourceName(stat.referer); sources[source]=(sources[source]||0)+1; if(type==='bot'){const bot=botName(stat.userAgent); bots[bot]=(bots[bot]||0)+1;} heatmap[(stat.date.getDay()+6)%7][stat.date.getHours()]++; } const human=matching.filter(s=>visitorType(s)==='human').length; const bot=matching.length-human; const ranking=values=>Object.entries(values).map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value); return { range, total:matching.length, human, bot, byDay:Object.values(byPeriod), browsers:ranking(browsers), sources:ranking(sources), bots:ranking(bots), heatmap, generatedAt:now.toISOString() }; }
+export function buildAnalytics(items,range='week') { const now=new Date(),allStats=[];for(const item of items||[])for(const stat of item.stats||[]){const date=safeDate(stat.timestamp);if(date)allStats.push({...stat,date,itemId:item.id});}const start=startForRange(range,now),matching=allStats.filter(stat=>!start||stat.date>=start),aggregateWeeks=range==='quarter'||range==='all';let first=matching.length?new Date(Math.min(...matching.map(s=>s.date))):new Date(now);first.setHours(0,0,0,0);const periodStart=aggregateWeeks?monday(start||first):(start||first),end=new Date(now);end.setHours(0,0,0,0);const keys=aggregateWeeks?(()=>{const result=[],cursor=new Date(periodStart);while(cursor<=end){result.push(dayKey(cursor));cursor.setDate(cursor.getDate()+7);}return result;})():dateKeys(periodStart,end);const byPeriod=Object.fromEntries(keys.map(key=>[key,{date:key,human:0,bot:0,label:aggregateWeeks?`Week of ${key.slice(5)}`:undefined}]));const browsers={},sources={},bots={},socialSources={linkedin:0,mastodon:0,x:0,notes:0,substack:0,unknown:0},heatmap=Array.from({length:7},()=>Array(24).fill(0));for(const stat of matching){const type=visitorType(stat),key=aggregateWeeks?weekKey(stat.date):dayKey(stat.date);if(byPeriod[key])byPeriod[key][type]++;if(type==='human'){const browser=browserName(stat.userAgent);browsers[browser]=(browsers[browser]||0)+1;}const source=sourceName(stat.referer);sources[source]=(sources[source]||0)+1;if(type==='bot'){const bot=botName(stat.userAgent);bots[bot]=(bots[bot]||0)+1;}socialSources[socialSource(stat)]++;heatmap[(stat.date.getDay()+6)%7][stat.date.getHours()]++;}const human=matching.filter(s=>visitorType(s)==='human').length,bot=matching.length-human,ranking=values=>Object.entries(values).map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value);return{range,total:matching.length,human,bot,byDay:Object.values(byPeriod),browsers:ranking(browsers),sources:ranking(sources),bots:ranking(bots),socialSources:ranking(socialSources),heatmap,generatedAt:now.toISOString()};}

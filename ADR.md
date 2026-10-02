@@ -484,3 +484,38 @@
 * **Context:** The analytics `Clicks by Browser` ranking could include bot/product labels because bot User-Agents were routed through browser classification. The request was to identify only web browsers for those bars.
 * **Decision:** Updated `app/lib/analytics.js` so browser classification remains limited to known browser signatures and browser rankings aggregate human visits only. Bot visits continue to be represented in the dedicated `Total Clicks per Bot` ranking.
 * **Consequences:** `Clicks by Browser` now contains only browser categories and no crawler/product names. Bot analytics remain available separately, while all other analytics measures, ranges, and API fields are preserved.
+
+
+## 54. Social Sharing Actions and Clicks by Social Media
+* **Date:** 2026-10-02
+* **Context:** The protected URL list needed direct sharing actions for LinkedIn, Mastodon, X, and Notes. Shared links must identify their social source, and analytics must classify clicks by that source while retaining an `unknown` bucket for missing or unsupported values.
+* **Decision:** Added four Actions-column buttons in `app/list/page.js` and a shared URL builder that appends the corresponding `source` query parameter. LinkedIn and X use intent URLs; Mastodon and Notes use Web Share when available and clipboard fallback. The redirect handler captures `source`, and both file and Cosmos visit storage persist it. Extended `app/lib/analytics.js` with range-aware social-source aggregation and added a `Clicks by Social Media` ranking card to `AnalyticsDashboard`, including `unknown`.
+* **Consequences:** Users can create correctly tagged social shares directly from the list, and both all-link and individual-link dashboards expose social attribution. Existing visits remain backward compatible and are classified as unknown. Share behavior depends on browser popup, Web Share, and clipboard capabilities where applicable.
+
+
+## 55. Social Action Icons and Substack Attribution
+* **Date:** 2026-10-02
+* **Context:** The URL list Actions column needed recognizable icons instead of text glyphs for social sharing controls, and users needed a Substack article sharing action. Each shared link must retain source attribution through the shortened URL.
+* **Decision:** Updated `app/list/page.js` with inline SVG brand-style icons for LinkedIn, Mastodon, X, Notes, and Substack. The shared URL builder appends the corresponding `source` query parameter, and a Substack action was added using `source=substack`. Extended `app/lib/analytics.js` with an explicit Substack bucket while preserving `unknown` for legacy or unsupported visits. Added shared SVG action styling in `app/globals.css`.
+* **Consequences:** Actions are visually recognizable, accessible through labels, and consistently attributed when clicked. Existing redirect logging and file/Cosmos persistence remain compatible because they already store `source`; historical records without attribution remain `unknown`. Inline SVGs avoid a new icon dependency, while Substack share behavior uses a share endpoint where available and browser share/clipboard fallback otherwise.
+
+
+## 56. Consolidated Social Sharing Popup
+* **Date:** 2026-10-02
+* **Context:** The URL list Actions column exposed separate social buttons, but sharing needed a single discoverable control and a popup listing LinkedIn, Mastodon, X, Notes, and Substack with their attributed shortened URLs and copy actions.
+* **Decision:** Updated `app/list/page.js` to replace the individual social buttons with one share action that opens an accessible modal. The modal generates each network URL with its `source` query parameter, offers network sharing, displays the full tagged URL, and provides clipboard copy feedback. Added responsive modal and row styles to `app/globals.css`.
+* **Consequences:** Actions are less crowded while all social networks remain available in one place. Attribution remains compatible with the existing redirect, storage, and analytics pipeline. Copy and Web Share behavior still depends on browser capabilities, with clear fallback/error handling.
+
+
+## 57. Copy-Only Social Popup and Analytics Range Style Restoration
+* **Date:** 2026-10-02
+* **Context:** The social popup presented social logos as highlighted buttons and offered a separate network action alongside Copy. Analytics range selectors for 1 week, 1 month, and related periods had lost the stronger application-wide control styling.
+* **Decision:** Updated `app/list/page.js` so social logos/network names render as non-interactive labels and each popup row has only one action, the highlighted `Copy` button. Updated `app/globals.css` with consistent flat bordered analytics range controls, clear hover/focus states, dark active selection, and matching primary Copy-button styling.
+* **Consequences:** The popup has a clearer single-purpose interaction and avoids falsely implying that logos are buttons. Analytics period selection is easier to scan and visually consistent with the rest of the application. Existing social attribution, sharing fallback logic, clipboard feedback, APIs, and storage remain unchanged.
+
+
+## 58. Social URLs in Stats Link Details and Twitter Actions Icon
+* **Date:** 2026-10-02
+* **Context:** The `/stats/[short]` Link Details table needed to expose the tagged social-media URLs used by the sharing workflow. The URL list Actions column also needed a Twitter icon for its social popup control.
+* **Decision:** Added LinkedIn, Mastodon, X/Twitter, Notes, and Substack rows to `app/stats/[short]/page.js`, each displaying a `source`-tagged short URL and a copy action. Reused the existing attribution format and added a Twitter bird SVG/mask for the list popup action in `app/globals.css`.
+* **Consequences:** Users can inspect and copy every attributed social URL directly from link stats, while the Actions column now has a recognizable Twitter-based sharing affordance. Existing redirect attribution, analytics, storage, and popup behavior remain unchanged.
