@@ -470,3 +470,10 @@
 * **Context:** The `/stats` detail page needed controls to generate/regenerate the QR code for the current shortened URL and copy that QR image to the clipboard. The authenticated header menu also needed `List URLs` renamed to `Settings`.
 * **Decision:** Updated `app/stats/[short]/page.js` to add QR generation/regeneration and image clipboard actions using the existing protected stats POST endpoint and Clipboard API. Added loading/status feedback and responsive `.qr-stats-actions` styling in `app/globals.css`. Updated `app/layout.js` to display `Settings` while retaining the existing `/list` destination.
 * **Consequences:** Authenticated users can refresh and copy the current URL QR code directly from stats without leaving the page. Clipboard support depends on browser image-clipboard capability and reports a clear error when unavailable. Existing QR persistence, analytics, access logs, routing, and menu destination remain unchanged.
+
+
+## 52. Group Analytics Bots by Product Name
+* **Date:** 2026-10-01
+* **Context:** Analytics bot rankings were grouped by complete User-Agent-derived values, causing different versions and transport/library details of the same bot to appear as separate groups. For example, Mastodon User-Agents with different versions must be shown together as `Mastodon` for every selected analytics measure.
+* **Decision:** Updated `app/lib/analytics.js` to normalize bot ranking labels by known product tokens, including Mastodon, and to use a product-token fallback for unknown bots. The shared aggregation continues to filter visits by the selected range and exposes the same `bots` response shape, so all dashboards consume the grouping consistently.
+* **Consequences:** Versioned User-Agents now aggregate into stable product groups across bot click rankings and related analytics measures. Analytics becomes more readable and comparable, while unknown bot formats remain visible under a sanitized product label or `Unknown bot`. No persistence, API contract, or UI component changes are required.

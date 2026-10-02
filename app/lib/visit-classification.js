@@ -15,7 +15,7 @@ export const BOT_PATTERNS = [
   'facebookexternalhit', 'facebot', 'twitterbot', 'linkedinbot',
   'slackbot', 'whatsapp', 'telegrambot', 'discordbot',
   'skypeuripreview', 'pinterestbot', 'vkshare', 'mastodon', 'Iceshrimp',
-  'Akkoma', 'Friendica',
+  'Akkoma', 'Friendica', 'SubstackContentFetch',
 
   // AI crawlers and fetchers
   'gptbot', 'chatgpt-user', 'claudebot', 'anthropic-ai',
@@ -23,7 +23,7 @@ export const BOT_PATTERNS = [
 
   // SEO, archives, and monitoring
   'ia_archiver', 'ahrefsbot', 'semrushbot', 'dotbot', 'mj12bot',
-  'uptimerobot',
+  'uptimerobot', 'axios', 'node'
 ];
 
 export function isBotUserAgent(userAgent = '') {

@@ -5,8 +5,32 @@ function isBotStat(stat) { return classifyVisit(stat); }
 function visitorType(stat) { return isBotStat(stat) ? 'bot' : 'human'; }
 function dayKey(date) { return date.toISOString().slice(0, 10); }
 function startForRange(range, now) { if (range === 'all') return null; const start = new Date(now); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() - ((RANGE_DAYS[range] || 7) - 1)); return start; }
-function browserName(userAgent = '') { const ua = userAgent.toLowerCase(); if (ua.includes('edg')) return 'Edge'; if (ua.includes('opr') || ua.includes('opera')) return 'Opera'; if (ua.includes('chrome') && !ua.includes('chromium')) return 'Chrome'; if (ua.includes('firefox')) return 'Firefox'; if (ua.includes('safari') && !ua.includes('chrome')) return 'Safari'; if (ua.includes('msie') || ua.includes('trident')) return 'Internet Explorer'; if (ua.includes('android')) return 'Android Browser'; if (ua.includes('bot') || ua.includes('crawler') || ua.includes('spider')) return 'Bot/Crawler'; return userAgent ? 'Other' : 'Unknown'; }
-function botName(userAgent = '') { const ua = userAgent.toLowerCase(); const known = [['Googlebot','googlebot'],['Bingbot','bingbot'],['Slackbot','slackbot'],['Twitterbot','twitterbot'],['LinkedInBot','linkedinbot'],['WhatsApp','whatsapp'],['TelegramBot','telegrambot'],['Discordbot','discordbot'],['Facebook crawler','facebookexternalhit'],['Applebot','applebot'],['GPTBot','gptbot'],['ClaudeBot','claudebot'],['DuckDuckBot','duckduckbot']]; const match = known.find(([, token]) => ua.includes(token)); if (match) return match[0]; const token = (userAgent.match(/([a-z][a-z0-9_-]*(?:bot|crawler|spider|preview|headless))/i) || [])[1]; return token || (userAgent.trim() ? userAgent.trim().slice(0, 48) : 'Unknown bot'); }
+
+// Keep bot labels stable by grouping on the product name, not the complete
+// User-Agent (which commonly contains a version, library, and URL).
+const KNOWN_BOTS = [
+  ['Googlebot', 'googlebot'], ['Bingbot', 'bingbot'], ['Slackbot', 'slackbot'],
+  ['Twitterbot', 'twitterbot'], ['LinkedInBot', 'linkedinbot'], ['WhatsApp', 'whatsapp'],
+  ['TelegramBot', 'telegrambot'], ['Discordbot', 'discordbot'], ['Facebook crawler', 'facebookexternalhit'],
+  ['Applebot', 'applebot'], ['GPTBot', 'gptbot'], ['ClaudeBot', 'claudebot'],
+  ['DuckDuckBot', 'duckduckbot'], ['Mastodon', 'mastodon'], ['Iceshrimp', 'iceshrimp'],
+  ['Akkoma', 'akkoma'], ['Friendica', 'friendica'], ['Goodgorithm', 'goodgorithm'],
+  ['Node', 'node'], ['Axios', 'axios'],
+];
+function botName(userAgent = '') {
+  const ua = String(userAgent || '');
+  const lower = ua.toLowerCase();
+  const known = KNOWN_BOTS.find(([, token]) => lower.includes(token));
+  if (known) return known[0];
+  const product = ua.split(/[\s(]/).find(token => /(?:bot|crawler|spider|preview|headless)/i.test(token));
+  if (product) return product.split('/')[0].replace(/[^a-z0-9._-]/gi, '') || 'Unknown bot';
+  return 'Unknown bot';
+}
+function browserName(userAgent = '') {
+  if (isBotUserAgentForAnalytics(userAgent)) return botName(userAgent);
+  const ua = userAgent.toLowerCase(); if (ua.includes('edg')) return 'Edge'; if (ua.includes('opr') || ua.includes('opera')) return 'Opera'; if (ua.includes('chrome') && !ua.includes('chromium')) return 'Chrome'; if (ua.includes('firefox')) return 'Firefox'; if (ua.includes('safari') && !ua.includes('chrome')) return 'Safari'; if (ua.includes('msie') || ua.includes('trident')) return 'Internet Explorer'; if (ua.includes('android')) return 'Android Browser'; return userAgent ? 'Other' : 'Unknown';
+}
+function isBotUserAgentForAnalytics(userAgent = '') { return classifyVisit({ userAgent }); }
 function sourceName(referer = '') { if (!referer) return 'Direct / unknown'; try { const host = new URL(referer).hostname.replace(/^www\./, ''); if (host.includes('x.com') || host.includes('twitter.com')) return 'X.com'; if (host.includes('substack.com')) return 'Substack'; if (host.includes('linkedin.com')) return 'LinkedIn'; if (host.includes('facebook.com')) return 'Facebook'; if (host.includes('reddit.com')) return 'Reddit'; return host || 'Other'; } catch { return 'Other'; } }
 function dateKeys(start, end) { const keys = []; const cursor = new Date(start); cursor.setHours(0,0,0,0); while (cursor <= end) { keys.push(dayKey(cursor)); cursor.setDate(cursor.getDate() + 1); } return keys; }
 function monday(date) { const result = new Date(date); result.setHours(0,0,0,0); result.setDate(result.getDate() - ((result.getDay() + 6) % 7)); return result; }
