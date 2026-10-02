@@ -30,3 +30,82 @@
 
 .social-detail-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .social-copy-button { white-space: nowrap; }
+
+
+/* Style guide alignment: shared responsive editorial/utility foundation */
+:root{
+  --color-error:#b91c1c;
+  --color-error-bg:#fef2f2;
+  --color-error-border:#fecaca;
+  --color-decay-amber:#b45309;
+  --color-decay-bg:#fffbeb;
+  --color-decay-danger:#dc2626;
+  --radius-control:4px;
+  --space-unit:8px;
+}
+html{overflow-x:hidden}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55}
+h1,h2,h3{color:var(--color-text-primary);line-height:1.25}
+h1{font-size:clamp(2rem,4vw,2.625rem);margin:0 0 16px}
+h2{font-size:clamp(1.5rem,3vw,1.75rem);margin:32px 0 12px}
+h3{font-size:clamp(1.125rem,2vw,1.25rem);margin:24px 0 10px}
+p{margin:0 0 16px}
+button,.btn-primary,.btn-tertiary,input,select{border-radius:var(--radius-control)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--color-brand-accent);outline-offset:2px}
+button.secondary{background:#fff;color:var(--color-text-primary);border:1px solid var(--color-border-subtle)}
+button.secondary:hover,.btn-tertiary:hover{background:#f0f8f2;border-color:var(--color-brand-accent);text-decoration:none}
+button:hover:not(:disabled),.btn-primary:hover{filter:none}
+button:disabled{opacity:.55;cursor:not-allowed}
+label{display:block;font-size:14px;font-weight:600;margin:0 0 6px}
+input,select{min-height:40px}
+.error{color:var(--color-error);background:var(--color-error-bg);border-color:var(--color-error-border);border-radius:var(--radius-control)}
+.header-spacer{height:0}
+footer{max-width:1140px;margin:32px auto 0;padding:24px 20px;border-top:1px solid var(--color-border-subtle);color:var(--color-text-secondary);font-size:12px;text-align:center}
+.form-section-title{display:block;font-family:Georgia,"Times New Roman",serif;font-size:1.25rem;line-height:1.3;margin:0 0 16px;color:var(--color-text-primary)}
+.standard-form,.decay-form{position:relative}
+.standard-form{padding-top:20px}
+.standard-form::before{content:"Recommended";position:absolute;right:0;top:0;color:var(--color-text-secondary);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.decay-form{border-color:var(--color-decay-amber);background:var(--color-decay-bg)}
+.decay-form .form-section-title{color:var(--color-decay-danger)}
+.prominent-button{width:100%;min-height:44px;padding:12px 24px;font-size:16px;font-weight:700}
+.prominent-input{min-height:48px;font-size:16px}
+.advanced-header{display:flex;align-items:center;justify-content:space-between;font-weight:700}
+.advanced-header:hover{background:#ececdf}
+.toggle-icon{font-size:20px;line-height:1}
+.result{overflow-wrap:anywhere;border-left:3px solid var(--color-brand-accent)}
+.result-qr{margin-top:16px;text-align:center}.result-qr img{display:block;width:240px;max-width:100%;margin:8px auto 0;background:#fff;border:1px solid var(--color-border-subtle)}
+.recent-title{font-weight:700;margin-bottom:4px}.recent-details{min-width:0}.recent-meta{overflow-wrap:anywhere}.recent-short-url{display:inline-block;margin:8px 0;font:700 14px ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}.recent-action-button{display:inline-block;padding:8px 14px;border:1px solid var(--color-border-subtle);background:#fff;color:var(--color-text-primary);font-size:14px;font-weight:600;border-radius:4px}.recent-action-button:hover{background:#f0f8f2;border-color:var(--color-brand-accent);text-decoration:none}.copy-action{cursor:pointer}
+.stats-row{margin-top:32px}.stats-content>strong{display:block;font-family:Georgia,"Times New Roman",serif;font-size:1.5rem;margin-bottom:12px}
+.stats-details-table th{width:34%;text-transform:none;font-size:14px;cursor:default}.stats-qr-section h2{margin-top:0}.access-log-section{margin-top:40px;padding-top:24px;border-top:2px solid var(--color-text-primary)}
+.analytics-card h3{margin-top:0}.analytics-card{border-radius:4px}.analytics-range{cursor:pointer}
+table a{overflow-wrap:anywhere}.metadata{line-height:1.4}
+@media(max-width:768px){
+  .container,.home-centered,.main-content{padding-left:16px;padding-right:16px}
+  .top-bar-inner{gap:8px}.logo-left{display:none}.logo-center{flex:1}.header-actions{flex:0 auto}.actions{gap:4px}.btn-tertiary{padding:8px 10px;font-size:13px}
+  .home-split{gap:32px}.standard-form::before{position:static;margin:-4px 0 12px}
+  .decay-form{margin-top:24px;padding:16px}.recent-item-layout{gap:12px}.recent-qr-wrap{text-align:center}.recent-qr{width:112px}
+  .stats-details-table th{width:40%}.analytics-dashboard{margin-top:32px}
+  footer{padding-left:16px;padding-right:16px}
+}
+@media(max-width:560px){
+  .top-bar{min-height:64px}.top-bar-inner{min-height:64px}.logo-image{max-height:28px}.header-actions .actions a:last-child{display:none}
+  .main-content{padding-top:32px}.home-centered{padding-top:20px}.stats-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stats-detail-row{gap:16px}.stats-details-table{font-size:13px}.stats-details-table th{width:38%;padding:8px}.stats-details-table td{padding:8px}
+  .share-network-row{padding:12px}.share-tagged-url{font-size:12px}.qr-stats-image{width:240px}
+}
+
+
+/* Homepage option layout and analytics chart readability refinements */
+.advanced-options .option-input{width:100%;max-width:100%}
+.expiration-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.expiration-fields>div{min-width:0}
+.advanced-options .option:nth-child(2)::after{content:"Choose a future date, and optionally limit the total number of visits.";display:block;margin-top:6px;font-size:12px;line-height:1.4;color:var(--color-text-secondary)}
+.advanced-options .privacy-option .metadata{display:block;margin-top:6px}
+.prominent-button{width:auto;max-width:100%;display:inline-block}
+.chart-label{font-size:11px}
+.heatmap-wrap{width:100%;overflow-x:auto;padding-bottom:4px}
+.heatmap-hours,.heatmap-row{display:grid;grid-template-columns:42px repeat(24,minmax(18px,1fr));gap:3px;min-width:560px;align-items:center}
+.heatmap-hours{margin-left:0;margin-bottom:4px;color:var(--color-text-secondary);font-size:10px;text-align:center}
+.heatmap-day{font-size:11px;color:var(--color-text-secondary)}
+.heat-cell{display:block;width:100%;height:18px;min-width:18px;border:1px solid rgba(21,21,21,.08);background:#f1f1ed;border-radius:2px}
+@media(max-width:560px){.expiration-fields{grid-template-columns:1fr}.prominent-button{width:auto}}
