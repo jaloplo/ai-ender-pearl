@@ -538,3 +538,10 @@
 * **Context:** Homepage advanced-option controls needed clarifications beneath their controls, inputs needed to use the full available row, and action buttons should size to their content. On `/list`, Clicks per Day axis numbers were visually oversized and the Day and Hour Heatmap had no effective grid/cell presentation.
 * **Decision:** Added an additive CSS refinement layer in `app/globals.css`: full-width advanced inputs and responsive expiration fields, helper copy for expiration/privacy, content-sized homepage buttons, smaller chart labels, and explicit heatmap grid/cell styling.
 * **Consequences:** Homepage guidance and form proportions are clearer, buttons no longer consume the whole row, analytics labels match the established visual scale, and the heatmap visibly renders all day/hour cells including zero-visit periods. No runtime, API, storage, or analytics aggregation behavior changed.
+
+
+## 62. Bot and Human Social Click Analytics
+* **Date:** 2026-10-04
+* **Context:** Analytics needed separate social-media click rankings for bot traffic and human traffic, while the recent visit audit needed to expose each visit's social origin.
+* **Decision:** Extended `app/lib/analytics.js` with range-aware `socialBotSources` and `socialHumanSources` aggregations. Updated `app/components/AnalyticsDashboard.js` to rename the social card to `Clicks by Social Media (Bots)` and add `Clicks by Social Media by Human`. Updated `app/components/RecentVisitsPager.js` with a `Social Media Origin` column populated from persisted visit source attribution.
+* **Consequences:** Analysts can compare bot and human social traffic without mixing visitor types, and the latest-50 audit provides direct attribution context. Existing source buckets, legacy unknown handling, APIs, storage, pagination, and styling remain compatible.
