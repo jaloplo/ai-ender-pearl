@@ -545,3 +545,10 @@
 * **Context:** Analytics needed separate social-media click rankings for bot traffic and human traffic, while the recent visit audit needed to expose each visit's social origin.
 * **Decision:** Extended `app/lib/analytics.js` with range-aware `socialBotSources` and `socialHumanSources` aggregations. Updated `app/components/AnalyticsDashboard.js` to rename the social card to `Clicks by Social Media (Bots)` and add `Clicks by Social Media by Human`. Updated `app/components/RecentVisitsPager.js` with a `Social Media Origin` column populated from persisted visit source attribution.
 * **Consequences:** Analysts can compare bot and human social traffic without mixing visitor types, and the latest-50 audit provides direct attribution context. Existing source buckets, legacy unknown handling, APIs, storage, pagination, and styling remain compatible.
+
+
+## 63. Access Log Social Media Origin Column
+* **Date:** 2026-10-04
+* **Context:** The `/stats/[short]` Access Log needed to expose the social network attribution captured by the existing sharing and redirect pipeline.
+* **Decision:** Updated `app/stats/[short]/page.js` to add a sortable `Social Media Origin` column sourced from persisted `source` attribution, with a compatibility fallback and an em dash for missing legacy values.
+* **Consequences:** Stats users can identify the social origin of each visit directly in the Access Log. Existing pagination, sorting, visitor classification, analytics, and records without attribution remain compatible.
