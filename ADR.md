@@ -552,3 +552,17 @@
 * **Context:** The `/stats/[short]` Access Log needed to expose the social network attribution captured by the existing sharing and redirect pipeline.
 * **Decision:** Updated `app/stats/[short]/page.js` to add a sortable `Social Media Origin` column sourced from persisted `source` attribution, with a compatibility fallback and an em dash for missing legacy values.
 * **Consequences:** Stats users can identify the social origin of each visit directly in the Access Log. Existing pagination, sorting, visitor classification, analytics, and records without attribution remain compatible.
+
+
+## 64. Combined Social Analytics and Referer Audit Column
+* **Date:** 2026-10-08
+* **Context:** Analytics visuals needed explanatory text below each title, the two social-media visitor-type cards needed to become one comparison visual, and the Last 50 Visited URLs audit needed to expose the persisted referer.
+* **Decision:** Updated `app/components/AnalyticsDashboard.js` with metadata explanations for every visual, merged social analytics into one network ranking with green human and orange bot bar segments, and retained the existing range/API data fields. Updated `app/components/RecentVisitsPager.js` with a Referer column and legacy-safe fallback. Added focused social-bar styling to `app/globals.css`.
+* **Consequences:** Analytics is more understandable and social traffic can be compared in one place without backend changes. Audit users can inspect referring URLs directly. Existing persisted data, API compatibility, pagination, and responsive styling remain intact.
+
+
+## 65. Separate Human and Bot Social Media Bars
+* **Date:** 2026-10-08
+* **Context:** The "Clicks by Social Media" visual needed to show both human and bot values as horizontal bars, with two bars vertically associated with each social network rather than overlapping values in one track.
+* **Decision:** Updated `app/components/AnalyticsDashboard.js` so each social network renders a labeled Humans bar and a labeled Bots bar, each with its own numeric value and shared per-network scale. Added responsive styles in `app/globals.css` for the two-row bar layout, preserving green human and orange bot semantics and mobile stacking.
+* **Consequences:** Human and bot social traffic can be compared directly and values remain readable even when one visitor type is zero. The change is presentation-only: existing analytics aggregation, API fields, range filtering, accessibility labels, and responsive behavior remain intact.
