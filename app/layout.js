@@ -32,6 +32,7 @@ export default function RootLayout({ children }) {
                   <>
                     <a href="/" className="btn-tertiary">Shorten</a>
                     <a href="/list" className="btn-tertiary">Settings</a>
+                    <a href="/admin/components" className="btn-tertiary">Components</a>
                   </>
                 ) : (
                   <a href="/login" className="btn-tertiary">Login</a>

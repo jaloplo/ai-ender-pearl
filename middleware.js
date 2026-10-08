@@ -5,10 +5,12 @@ export function middleware(request) {
   const authCookie = request.cookies.get('auth');
   const isAuthenticated = authCookie && authCookie.value === 'true';
 
-  // Protect list/stats pages and their data endpoints, including analytics.
+  // The current authentication model has one administrator account. Until
+  // role claims exist, auth=true is the admin boundary for protected tools.
   const protectedPath =
     pathname === '/list' ||
     pathname.startsWith('/stats') ||
+    pathname.startsWith('/admin') ||
     pathname.startsWith('/api/urls') ||
     pathname.startsWith('/api/stats') ||
     pathname === '/api/visits' ||
@@ -27,6 +29,7 @@ export const config = {
   matcher: [
     '/list',
     '/stats/:path*',
+    '/admin/:path*',
     '/api/urls/:path*',
     '/api/stats/:path*',
     '/api/visits',

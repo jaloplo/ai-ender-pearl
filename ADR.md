@@ -566,3 +566,17 @@
 * **Context:** The "Clicks by Social Media" visual needed to show both human and bot values as horizontal bars, with two bars vertically associated with each social network rather than overlapping values in one track.
 * **Decision:** Updated `app/components/AnalyticsDashboard.js` so each social network renders a labeled Humans bar and a labeled Bots bar, each with its own numeric value and shared per-network scale. Added responsive styles in `app/globals.css` for the two-row bar layout, preserving green human and orange bot semantics and mobile stacking.
 * **Consequences:** Human and bot social traffic can be compared directly and values remain readable even when one visitor type is zero. The change is presentation-only: existing analytics aggregation, API fields, range filtering, accessibility labels, and responsive behavior remain intact.
+
+
+## 66. Technical Design Guide for Future Feature Development
+* **Date:** 2026-10-08
+* **Context:** The application has accumulated a layered Next.js implementation covering public shortening, Decay links, protected management and stats pages, dual persistence backends, visit classification, analytics, QR generation, and shared presentation patterns. Future feature work needed a current technical guide grounded in the live source rather than relying only on historical ADR entries.
+* **Decision:** Created root-level `technical-design.md`. The guide documents architectural layers, storage contracts, URL and visit data shapes, request flows, API and middleware conventions, analytics extension points, frontend composition patterns, security/privacy rules, feature-development workflow, quality checklist, Mermaid diagrams, and known source-alignment notes. Added supporting analysis to `reasoning.md`. No runtime code was changed.
+* **Consequences:** Contributors have a single implementation-oriented reference for extending the current approach while preserving backend parity, authentication boundaries, privacy behavior, analytics semantics, accessibility, and responsive UI patterns. The guide adds a documentation maintenance responsibility and should be updated when durable architectural patterns change; historical decisions remain in `ADR.md`.
+
+
+## 67. Admin Visual Components Gallery
+* **Date:** 2026-10-08
+* **Context:** The application needed one authenticated location showing the current visual components, styles, and design patterns with safe fake data so future UI changes can be reviewed consistently.
+* **Decision:** Added `/admin/components` with a labeled gallery covering headings 1–6, page/section/article content, paragraphs, jumbotron, titles, buttons and states, forms and feedback, cards/results, QR presentation, tables/rows, pagination, recent visits, and analytics. Added scoped styles in `app/globals.css`, protected `/admin/:path*` in `middleware.js`, and documented maintenance in the route README and reasoning notes.
+* **Consequences:** Administrators have a single, data-safe visual reference that reuses the live application design language. The gallery adds a small maintenance obligation: visual component changes should update the gallery in the same change. Because the live auth model currently exposes one authenticated admin account via `auth=true`, the route uses that existing boundary rather than introducing an unsupported role claim system.
