@@ -141,3 +141,14 @@ table a{overflow-wrap:anywhere}.metadata{line-height:1.4}
 
 /* Public changelog numbering */
 .history-entry-meta{display:flex;flex-direction:column;gap:4px}.history-number{color:var(--color-text-primary);font-family:Georgia,"Times New Roman",serif;font-size:22px;font-weight:700}.history-entry-meta .history-date{padding-top:0}@media(max-width:560px){.history-entry-meta{flex-direction:row;align-items:baseline;gap:10px}.history-number{font-size:20px}}
+
+
+/* Grouped header navigation menu */
+.header-actions{position:relative}
+.header-menu{position:relative}
+.header-menu summary{list-style:none}
+.header-menu summary::-webkit-details-marker{display:none}
+.header-menu-panel{position:absolute;right:0;top:calc(100% + 8px);z-index:120;display:flex;flex-direction:column;min-width:170px;padding:6px;background:#fff;border:1px solid var(--color-border-subtle);box-shadow:0 8px 20px rgba(21,21,21,.12)}
+.header-menu-panel a{padding:9px 12px;color:var(--color-text-primary);font-size:14px;white-space:nowrap}
+.header-menu-panel a:hover{background:#f0f8f2;text-decoration:none}
+@media(max-width:560px){.header-menu-panel{right:0}.header-menu summary{padding:8px 10px;font-size:13px}}

@@ -586,3 +586,10 @@
 * **Context:** The public history page needed to be renamed to Changelog, moved from `/history` to `/changelog`, omit ADR entries that have no date, and display sequential numbers from the oldest dated item to the newest.
 * **Decision:** Moved the page to `app/changelog/page.js`, updated the header link and metadata, retained only dated curated changelog entries, and rendered reverse-calculated item numbers while keeping newest-first display order. Added responsive number/date metadata styling in `app/globals.css`.
 * **Consequences:** Visitors now use the clearer `/changelog` route and see an honest, numbered dated changelog. The newest item appears first for usability, while its number reflects chronological order. Undated historical ADR entries are intentionally excluded rather than assigned invented dates.
+
+
+## 70. ADR-Based Changelog and Grouped Header Menu
+* **Date:** 2026-10-08
+* **Context:** The public changelog needed to reflect dated decisions from `ADR.md`, omit undated items, display newest-first, and number entries oldest-to-newest. The header also needed to remove the standalone Shorten button and group navigation actions into a menu, with a Sign in option for anonymous visitors.
+* **Decision:** Reworked `app/changelog/page.js` with dated curated ADR decisions, newest-first sorting, and reverse chronological numbering. Updated `app/layout.js` to use an accessible native `<details>` menu containing Changelog, Settings, Components, and Logout for authenticated users, or Sign in for anonymous users. Added menu styling to `app/globals.css` and documented the implementation in `reasoning.md`.
+* **Consequences:** The changelog now has honest dated entries and the requested ordering/numbering. Header navigation is less cluttered and contextually auth-aware. Existing routes and authentication behavior are reused; the changelog remains curated and must be updated when future dated ADR decisions are added.
