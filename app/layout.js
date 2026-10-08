@@ -28,6 +28,7 @@ export default function RootLayout({ children }) {
             </div>
             <div className="header-actions">
               <div className="actions">
+                <a href="/changelog" className="btn-tertiary">Changelog</a>
                 {isAuthenticated ? (
                   <>
                     <a href="/" className="btn-tertiary">Shorten</a>
