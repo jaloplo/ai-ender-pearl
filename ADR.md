@@ -607,3 +607,9 @@
 * **Context:** Anonymous visitors saw a `Sign in` details control containing a second `Sign in` menu link. The requirement is to show one unique Sign in button with no menu effect, completing sign-in directly in one interaction.
 * **Decision:** Updated `app/layout.js` so anonymous visitors receive one direct `.btn-tertiary` anchor to `/login`. The authenticated grouped menu remains unchanged.
 * **Consequences:** Anonymous sign-in is now a clear single-click action without duplicate labels, dropdown state, or unnecessary menu interaction. Authenticated navigation behavior and existing styling are preserved.
+
+## 73. Persist Complete Visit Request Data and Display It in Access Logs
+* **Date:** 2026-10-09
+* **Context:** Each short-link visit needed to retain the complete incoming request information for auditing, and the stats Access Log needed to expose that information. Requests without a short code should return visitors to the root page.
+* **Decision:** Updated `app/[short]/route.js` to redirect missing short codes to `/` and persist method, URL, headers, IP, User-Agent, referer, and source in a `requestData` stats property. Added persistence/normalization support in `app/lib/urls.js` and `app/lib/cosmos.js`. Added a sortable `Complete Request Data` column to `app/stats/[short]/page.js`, with formatted JSON and a legacy-safe fallback.
+* **Consequences:** Visit auditing now retains the complete request context across both storage backends and displays it in per-link access logs. Existing flattened fields and legacy records remain compatible; request headers may contain sensitive data and are therefore visible only within the existing protected stats surface.
