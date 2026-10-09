@@ -152,3 +152,32 @@ table a{overflow-wrap:anywhere}.metadata{line-height:1.4}
 .header-menu-panel a{padding:9px 12px;color:var(--color-text-primary);font-size:14px;white-space:nowrap}
 .header-menu-panel a:hover{background:#f0f8f2;text-decoration:none}
 @media(max-width:560px){.header-menu-panel{right:0}.header-menu summary{padding:8px 10px;font-size:13px}}
+
+
+/* Anonymous homepage Advanced Options state */
+.advanced-box-anonymous {
+  background:#f3f3f3;
+  border-color:#c9c9c9;
+  color:#777;
+  opacity:.68;
+}
+.advanced-box-anonymous .advanced-header {
+  background:#e5e5e5;
+  color:#666;
+}
+.advanced-box-anonymous .advanced-header:hover {
+  background:#dedede;
+}
+.advanced-box-anonymous .advanced-options {
+  background:#eeeeee;
+}
+.advanced-box-anonymous .option {
+  background:#e7e7e7;
+  border-color:#cfcfcf;
+}
+.advanced-box-anonymous .option-input,
+.advanced-box-anonymous input {
+  background:#ddd;
+  color:#777;
+  border-color:#c3c3c3;
+}

@@ -80,7 +80,7 @@ export default function ShortenPage() {
           <strong className="form-section-title standard">Standard Link</strong>
           <label htmlFor="url-standard">Original URL</label>
           <input type="text" id="url-standard" value={standardUrl} onChange={(e) => setStandardUrl(e.target.value)} placeholder="https://example.com/very/long/path/to/your/resource" disabled={anyLoading} className="prominent-input" />
-          <div className="advanced-box">
+          <div className={`advanced-box ${!isAuthenticated ? 'advanced-box-anonymous' : ''}`}>
             <div className="advanced-header" onClick={() => !anyLoading && setAdvancedOpen(!advancedOpen)} role="button" tabIndex={0} aria-expanded={advancedOpen} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!anyLoading) setAdvancedOpen(!advancedOpen); } }}><span>Advanced Options {!isAuthenticated && ' (login required)'}</span><span className="toggle-icon">{advancedOpen ? '−' : '+'}</span></div>
             {advancedOpen && <div className="advanced-options">
               <div className={`option ${!isAuthenticated ? 'greyed' : ''}`}><label htmlFor="customSlug">Custom Alias (optional)</label><input type="text" id="customSlug" value={customSlug} onChange={(e) => setCustomSlug(e.target.value)} placeholder="my-campaign-link" disabled={anyLoading || !isAuthenticated} className="option-input" /><span className="metadata">Letters, numbers, - or _ only; 1-64 characters.</span></div>

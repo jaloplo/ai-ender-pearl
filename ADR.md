@@ -593,3 +593,17 @@
 * **Context:** The public changelog needed to reflect dated decisions from `ADR.md`, omit undated items, display newest-first, and number entries oldest-to-newest. The header also needed to remove the standalone Shorten button and group navigation actions into a menu, with a Sign in option for anonymous visitors.
 * **Decision:** Reworked `app/changelog/page.js` with dated curated ADR decisions, newest-first sorting, and reverse chronological numbering. Updated `app/layout.js` to use an accessible native `<details>` menu containing Changelog, Settings, Components, and Logout for authenticated users, or Sign in for anonymous users. Added menu styling to `app/globals.css` and documented the implementation in `reasoning.md`.
 * **Consequences:** The changelog now has honest dated entries and the requested ordering/numbering. Header navigation is less cluttered and contextually auth-aware. Existing routes and authentication behavior are reused; the changelog remains curated and must be updated when future dated ADR decisions are added.
+
+
+## 71. Gray Out Homepage Advanced Options for Anonymous Visitors
+* **Date:** 2026-10-08
+* **Context:** The homepage already disabled individual advanced shortening controls for visitors who were not signed in, but the surrounding Advanced Options component did not communicate that gated state visually.
+* **Decision:** Added an `advanced-box-anonymous` class in `app/page.js` when `isAuthenticated` is false, and added scoped gray-state styles in `app/globals.css` for the component container, header, options, labels, and inputs. The component remains expandable for discoverability, while its controls remain disabled by the existing authentication logic.
+* **Consequences:** Anonymous visitors now receive a clear, consistent gray visual cue that Advanced Options require login. Authenticated visitors retain the existing appearance and functionality, and no API, payload, validation, or persistence behavior changed.
+
+
+## 72. Direct Anonymous Sign-in Button
+* **Date:** 2026-10-08
+* **Context:** Anonymous visitors saw a `Sign in` details control containing a second `Sign in` menu link. The requirement is to show one unique Sign in button with no menu effect, completing sign-in directly in one interaction.
+* **Decision:** Updated `app/layout.js` so anonymous visitors receive one direct `.btn-tertiary` anchor to `/login`. The authenticated grouped menu remains unchanged.
+* **Consequences:** Anonymous sign-in is now a clear single-click action without duplicate labels, dropdown state, or unnecessary menu interaction. Authenticated navigation behavior and existing styling are preserved.

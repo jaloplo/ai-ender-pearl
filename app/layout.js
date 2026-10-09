@@ -25,21 +25,19 @@ export default function RootLayout({ children }) {
               </h1>
             </div>
             <div className="header-actions">
-              <details className="header-menu">
-                <summary className="btn-tertiary">{isAuthenticated ? 'Menu' : 'Sign in'}</summary>
-                {isAuthenticated ? (
+              {isAuthenticated ? (
+                <details className="header-menu">
+                  <summary className="btn-tertiary">Menu</summary>
                   <nav className="header-menu-panel" aria-label="Application menu">
                     <a href="/changelog">Changelog</a>
                     <a href="/list">Settings</a>
                     <a href="/admin/components">Components</a>
                     <a href="/api/auth/logout">Logout</a>
                   </nav>
-                ) : (
-                  <nav className="header-menu-panel" aria-label="Sign in menu">
-                    <a href="/login">Sign in</a>
-                  </nav>
-                )}
-              </details>
+                </details>
+              ) : (
+                <a className="btn-tertiary" href="/login">Sign in</a>
+              )}
             </div>
           </div>
         </div>
